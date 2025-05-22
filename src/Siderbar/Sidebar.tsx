@@ -1,6 +1,4 @@
 "use client"
-
-import type React from "react"
 import { useRef, useEffect } from "react"
 import { Box, Typography, Paper, Divider, Avatar, Tooltip } from "@material-ui/core"
 import { makeStyles, type Theme, createStyles } from "@material-ui/core/styles"
@@ -8,12 +6,10 @@ import { DragIndicator } from "@material-ui/icons"
 import { useTaskContext } from "../contexts/TasksContext"
 
 
-// Definir el tipo para la referencia
 interface TaskRefs {
     [key: string]: HTMLDivElement | null
 }
 
-// Definir los estilos con tipos correctos
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
         root: {
@@ -48,6 +44,9 @@ const useStyles = makeStyles((theme: Theme) =>
             "&:hover": {
                 boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
                 borderColor: "#0e766e",
+            },
+            "&:active": {
+                cursor: "grabbing",
             },
         },
         dragIndicator: {
@@ -92,6 +91,11 @@ const useStyles = makeStyles((theme: Theme) =>
             width: 24,
             height: 24,
         },
+        dragging: {
+            opacity: 0.5,
+            transform: "scale(1.02)",
+            boxShadow: "0 8px 16px rgba(0,0,0,0.1) !important",
+        },
     }),
 )
 
@@ -101,48 +105,8 @@ export function Sidebar() {
     const taskRefs = useRef<TaskRefs>({})
     const draggableInstancesRef = useRef<any[]>([])
 
-    // Implementar arrastrar y soltar nativo como respaldo
-    const handleDragStart = (e: React.DragEvent<HTMLDivElement>, taskId: string) => {
-        e.dataTransfer.setData("text/plain", taskId)
-        e.dataTransfer.effectAllowed = "move"
-
-        // Añadir una clase para estilo durante el arrastre
-        if (e.currentTarget) {
-            e.currentTarget.classList.add("dragging")
-        }
-
-        // Crear una imagen de arrastre personalizada (opcional)
-        const dragImage = document.createElement("div")
-        dragImage.textContent = "✓"
-        dragImage.style.backgroundColor = "#0e766e"
-        dragImage.style.color = "white"
-        dragImage.style.padding = "8px"
-        dragImage.style.borderRadius = "4px"
-        dragImage.style.position = "absolute"
-        dragImage.style.top = "-1000px"
-        document.body.appendChild(dragImage)
-
-        try {
-            e.dataTransfer.setDragImage(dragImage, 0, 0)
-        } catch (error) {
-            console.error("Error setting drag image:", error)
-        }
-
-        setTimeout(() => {
-            document.body.removeChild(dragImage)
-        }, 0)
-    }
-
-    const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
-        // Remover la clase de arrastre
-        if (e.currentTarget) {
-            e.currentTarget.classList.remove("dragging")
-        }
-    }
-
-    // Configurar los elementos arrastrables para FullCalendar
+    // Configurar los elementos arrastrables para FullCalendar SOLAMENTE
     useEffect(() => {
-        // Limpiar instancias anteriores
         const cleanupDraggables = () => {
             draggableInstancesRef.current.forEach((instance) => {
                 if (instance && instance.destroy) {
@@ -152,17 +116,14 @@ export function Sidebar() {
             draggableInstancesRef.current = []
         }
 
-        // Esperar a que FullCalendar.Draggable esté disponible
         const setupDraggables = () => {
             console.log("Setting up draggables, FullCalendar available:", !!window.FullCalendar)
 
-            // Verificar que window.FullCalendar existe antes de usarlo
             if (window.FullCalendar && window.FullCalendar.Draggable) {
                 cleanupDraggables()
 
                 try {
-                    // Crear una instancia de Draggable para todos los elementos con la clase task-card
-                    // @ts-ignore - Ignoramos el error de TypeScript aquí
+                    // @ts-ignore
                     const Draggable = window.FullCalendar.Draggable
                     const containerEl = document.getElementById("draggable-container")
 
@@ -195,19 +156,15 @@ export function Sidebar() {
                     console.error("Error creating draggable:", error)
                 }
             } else {
-                // Si FullCalendar.Draggable no está disponible, intentar de nuevo después de un tiempo
                 console.log("FullCalendar not available yet, retrying...")
                 setTimeout(setupDraggables, 1000)
             }
         }
 
-        // Iniciar la configuración después de un breve retraso para asegurar que el DOM esté listo
         setTimeout(setupDraggables, 500)
-
         return cleanupDraggables
     }, [unscheduledTasks])
 
-    // Funciones para obtener colores según el tipo de tarea
     const getTaskBackgroundColor = (type: string): string => {
         switch (type) {
             case "todo":
@@ -254,11 +211,11 @@ export function Sidebar() {
                         ref={(el: HTMLDivElement | null) => (taskRefs.current[task.id] = el)}
                         className={`${classes.taskCard} task-card`}
                         data-task-id={task.id}
-                        draggable={true}
-                        onDragStart={(e) => handleDragStart(e, task.id)}
-                        onDragEnd={handleDragEnd}
+                    // REMOVEMOS completamente los manejadores nativos de HTML5
+                    // draggable={true}
+                    // onDragStart={...}
+                    // onDragEnd={...}
                     >
-                        {/* Indicador de arrastre */}
                         <Tooltip title="Drag this task to the calendar">
                             <Box className={classes.dragIndicator}>
                                 <DragIndicator />
