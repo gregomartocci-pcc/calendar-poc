@@ -5,9 +5,29 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #f9fafb;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+/* FullCalendar Styles */
+.fc-header-toolbar {
+  margin-bottom: 1em !important;
+}
+
+.fc-button-primary {
+  background-color: #0e766e !important;
+  border-color: #0e766e !important;
+}
+
+.fc-button-primary:hover {
+  background-color: #0c5e58 !important;
+  border-color: #0c5e58 !important;
+}
+
+.fc-day-today {
+  background-color: #f3f4f6 !important;
+}
+
+.fc-event {
+  background-color: #0e766e !important;
+  border-color: #0e766e !important;
 }

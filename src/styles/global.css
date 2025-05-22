@@ -1,0 +1,64 @@
+/* Estilos globales */
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans",
+        "Droid Sans", "Helvetica Neue", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #f9fafb;
+}
+
+code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+/* Estilos para el scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Estilos para el drag and drop */
+.task-item {
+    cursor: grab;
+}
+
+.task-item:active {
+    cursor: grabbing;
+}
+
+.task-item.dragging {
+    opacity: 0.5;
+}
+
+/* Estilos para los tipos de tareas */
+.task-todo {
+    background-color: #e6f7f5;
+    color: #0e766e;
+    border-left: 3px solid #0e766e;
+}
+
+.task-consult {
+    background-color: #e0f2fe;
+    color: #075985;
+    border-left: 3px solid #075985;
+}
+
+.task-review {
+    background-color: #fee6c9;
+    color: #9a3412;
+    border-left: 3px solid #9a3412;
+}

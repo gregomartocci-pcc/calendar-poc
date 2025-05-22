@@ -1,0 +1,71 @@
+/* Estilos para el calendario */
+.fc {
+    --fc-border-color: #e5e7eb;
+    --fc-button-bg-color: #0e766e;
+    --fc-button-border-color: #0e766e;
+    --fc-button-hover-bg-color: #0c5e58;
+    --fc-button-hover-border-color: #0c5e58;
+    --fc-button-active-bg-color: #0a4f4a;
+    --fc-button-active-border-color: #0a4f4a;
+    --fc-event-border-color: transparent;
+    --fc-today-bg-color: rgba(14, 118, 110, 0.1);
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active,
+.fc .fc-button-primary:not(:disabled):active {
+    background-color: var(--fc-button-active-bg-color);
+    border-color: var(--fc-button-active-border-color);
+}
+
+.fc .fc-button-primary:hover {
+    background-color: var(--fc-button-hover-bg-color);
+    border-color: var(--fc-button-hover-border-color);
+}
+
+.fc .fc-daygrid-day.fc-day-today {
+    background-color: var(--fc-today-bg-color);
+}
+
+.fc .fc-daygrid-day-number {
+    font-size: 0.875rem;
+    padding: 8px;
+}
+
+.fc .fc-toolbar-title {
+    font-size: 1.25rem;
+}
+
+.fc .fc-event {
+    border-radius: 4px;
+    padding: 2px 4px;
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+
+.fc .fc-event-main {
+    padding: 2px 0;
+}
+
+.fc .fc-more-link {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.fc .fc-daygrid-day-frame {
+    min-height: 100px;
+}
+
+@media (max-width: 768px) {
+    .fc .fc-toolbar {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .fc .fc-toolbar-title {
+        font-size: 1rem;
+    }
+
+    .fc .fc-daygrid-day-frame {
+        min-height: 60px;
+    }
+}
