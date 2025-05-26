@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@evergreen/core": "^1.1.26",
+    "@evergreen/core-button": "^1.0.3",
+    "@evergreen/core-theme": "^1.1.1",
     "@fullcalendar/daygrid": "^5.10.0",
     "@fullcalendar/interaction": "^5.10.0",
     "@fullcalendar/react": "^5.10.0",

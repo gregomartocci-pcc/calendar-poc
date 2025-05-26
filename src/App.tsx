@@ -1,13 +1,14 @@
 import { Box, Paper, Typography, Button } from "@material-ui/core"
-import { makeStyles, createStyles, type Theme } from "@material-ui/core/styles"
+import { makeStyles, createStyles, type Theme, ThemeProvider } from "@material-ui/core/styles"
+import { theme } from "@evergreen/core" // 👈 Importar el tema de Evergreen
 import { Header } from "./components/Header/Header"
 import { Navigation } from "./components/Navigation/Navigation"
 
-import { CalendarView } from "./components/CalendarView/CalendarView"
+
 import { TaskProvider } from "./contexts/TasksContext"
 import { Sidebar } from "./Siderbar/Sidebar"
 import { TaskFilters } from "./components/TasksFilters/TasksFilters"
-
+import CalendarView from "./components/CalendarView/CalendarView"
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -76,41 +77,44 @@ function App() {
   const classes = useStyles()
 
   return (
-    <Box className={classes.root}>
-      <Header />
-      <Navigation />
+    // 👈 Envolver toda la aplicación con ThemeProvider
+    <ThemeProvider theme={theme}>
+      <Box className={classes.root}>
+        <Header />
+        <Navigation />
 
-      <Box className={classes.content}>
-        <Box className={classes.header}>
-          <Typography variant="h5" className={classes.title}>
-            To Do Dashboard
-          </Typography>
+        <Box className={classes.content}>
+          <Box className={classes.header}>
+            <Typography variant="h5" className={classes.title}>
+              To Do Dashboard
+            </Typography>
 
-          <Button variant="contained" className={classes.createButton}>
-            CREATE TO DO
-          </Button>
-        </Box>
-
-        <Paper elevation={1}>
-          <Box className={classes.tabContainer}>
-            <Box className={`${classes.tab} ${classes.inactiveTab}`}>Clinical Dashboard</Box>
-            <Box className={`${classes.tab} ${classes.activeTab}`}>To Do Dashboard</Box>
+            <Button variant="contained" className={classes.createButton}>
+              CREATE TO DO
+            </Button>
           </Box>
 
-          <Box className={classes.mainContent}>
-            <TaskProvider>
-              <Box className={classes.contentLayout}>
-                <Sidebar />
-                <Box className={classes.rightContent}>
-                  <TaskFilters />
-                  <CalendarView />
+          <Paper elevation={1}>
+            <Box className={classes.tabContainer}>
+              <Box className={`${classes.tab} ${classes.inactiveTab}`}>Clinical Dashboard</Box>
+              <Box className={`${classes.tab} ${classes.activeTab}`}>To Do Dashboard</Box>
+            </Box>
+
+            <Box className={classes.mainContent}>
+              <TaskProvider>
+                <Box className={classes.contentLayout}>
+                  <Sidebar />
+                  <Box className={classes.rightContent}>
+                    <TaskFilters />
+                    <CalendarView />
+                  </Box>
                 </Box>
-              </Box>
-            </TaskProvider>
-          </Box>
-        </Paper>
+              </TaskProvider>
+            </Box>
+          </Paper>
+        </Box>
       </Box>
-    </Box>
+    </ThemeProvider>
   )
 }
 
