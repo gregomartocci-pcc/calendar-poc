@@ -79,122 +79,122 @@ export default function CalendarView() {
     const [selectedDateEvents, setSelectedDateEvents] = useState<Task[]>([])
     const [selectedDate, setSelectedDate] = useState<string>("")
 
-    // 🎯 MOCK EVENTS - Dates for MAY 2025 for demonstration purposes
+    // 🎯 EVENTOS DE MOCKUP - Fechas de MAYO 2025 para que los veas
     const [mockEvents, setMockEvents] = useState<{ [date: string]: Task[] }>({
         "2025-05-01": [
             {
                 id: "mock-1",
-                title: "Team Meeting",
+                title: "Reunión de Equipo",
                 type: "todo",
                 patient: "Juan Pérez",
-                facility: "Central Hospital",
+                facility: "Hospital Central",
                 assignee: "Dr. García",
             },
             {
                 id: "mock-2",
-                title: "Medical Consultation",
+                title: "Consulta Médica",
                 type: "consult",
                 patient: "María López",
-                facility: "North Clinic",
+                facility: "Clínica Norte",
                 assignee: "Dr. Martínez",
             },
         ],
         "2025-05-05": [
             {
                 id: "mock-3",
-                title: "File Review",
+                title: "Revisión de Expediente",
                 type: "review",
                 patient: "Carlos Ruiz",
-                facility: "Central Hospital",
-                assignee: "Nurse Ana",
+                facility: "Hospital Central",
+                assignee: "Enfermera Ana",
             },
             {
                 id: "mock-4",
-                title: "Scheduled Surgery",
+                title: "Cirugía Programada",
                 type: "todo",
                 patient: "Elena Vásquez",
-                facility: "South Hospital",
+                facility: "Hospital Sur",
                 assignee: "Dr. Rodríguez",
             },
             {
                 id: "mock-5",
-                title: "Follow-up Consultation",
+                title: "Consulta de Seguimiento",
                 type: "consult",
                 patient: "Roberto Silva",
-                facility: "East Clinic",
+                facility: "Clínica Este",
                 assignee: "Dr. Fernández",
             },
         ],
         "2025-05-10": [
             {
                 id: "mock-6",
-                title: "Post-Operative Review",
+                title: "Revisión Post-Operatoria",
                 type: "review",
                 patient: "Ana Torres",
-                facility: "Central Hospital",
+                facility: "Hospital Central",
                 assignee: "Dr. García",
             },
             {
                 id: "mock-7",
-                title: "Emergency",
+                title: "Emergencia",
                 type: "todo",
                 patient: "Luis Morales",
-                facility: "Emergency Hospital",
+                facility: "Hospital de Emergencias",
                 assignee: "Dr. Urgencias",
             },
         ],
         "2025-05-15": [
             {
                 id: "mock-8",
-                title: "Specialized Consultation",
+                title: "Consulta Especializada",
                 type: "consult",
                 patient: "Carmen Díaz",
-                facility: "Medical Center",
-                assignee: "Dr. Specialist",
+                facility: "Centro Médico",
+                assignee: "Dr. Especialista",
             },
         ],
         "2025-05-20": [
             {
                 id: "mock-9",
-                title: "Annual Review",
+                title: "Revisión Anual",
                 type: "review",
                 patient: "Pedro Jiménez",
-                facility: "Family Clinic",
-                assignee: "Dr. Family",
+                facility: "Clínica Familiar",
+                assignee: "Dr. Familia",
             },
             {
                 id: "mock-10",
-                title: "Physical Therapy",
+                title: "Terapia Física",
                 type: "todo",
                 patient: "Sofia Herrera",
-                facility: "Rehabilitation Center",
-                assignee: "Physiotherapist",
+                facility: "Centro de Rehabilitación",
+                assignee: "Fisioterapeuta",
             },
             {
                 id: "mock-11",
-                title: "Control Consultation",
+                title: "Consulta de Control",
                 type: "consult",
                 patient: "Miguel Ángel",
-                facility: "Family Clinic",
+                facility: "Clínica Familiar",
                 assignee: "Dr. Control",
             },
         ],
         "2025-05-25": [
             {
                 id: "mock-12",
-                title: "Monthly Review",
+                title: "Revisión Mensual",
                 type: "review",
                 patient: "Laura Gómez",
-                facility: "North Hospital",
-                assignee: "Dr. Monthly",
+                facility: "Hospital Norte",
+                assignee: "Dr. Mensual",
             },
             {
                 id: "mock-13",
-                title: "Urgent Appointment",
+                title: "Cita Urgente",
                 type: "todo",
                 patient: "Fernando Castro",
-                facility: "24h Emergency",
-                assignee: "Dr. Urgent",
+                facility: "Urgencias 24h",
+                assignee: "Dr. Urgente",
             },
         ],
     })
@@ -262,7 +262,7 @@ export default function CalendarView() {
     // Función para agregar un evento cuando se arrastra algo
     const addEventToDate = (title: string, type: "todo" | "consult" | "review", date: string) => {
         const newEvent: Task = {
-            id: `dragged-${Date.now()}`,
+            id: `dragged-${Date.now()}-${Math.random()}`,
             title: title,
             type: type,
             patient: "Paciente Arrastrado",
@@ -270,10 +270,14 @@ export default function CalendarView() {
             assignee: "Asignado por Drag",
         }
 
-        setMockEvents((prev) => ({
-            ...prev,
-            [date]: [...(prev[date] || []), newEvent],
-        }))
+        setMockEvents((prev) => {
+            const updated = {
+                ...prev,
+                [date]: [...(prev[date] || []), newEvent],
+            }
+            console.log(`✅ Estado actualizado para ${date}:`, updated[date])
+            return updated
+        })
 
         console.log(`✅ Evento agregado: ${title} para ${date}`)
     }
@@ -326,20 +330,26 @@ export default function CalendarView() {
                             console.log("📅 Drop event detectado:", info)
 
                             // Obtener datos del elemento arrastrado
-                            const taskTitle = info.draggedEl.textContent || "Tarea Arrastrada"
+                            const taskTitle = info.draggedEl.textContent?.trim() || "Tarea Arrastrada"
                             const taskType = info.draggedEl.getAttribute("data-task-type") || "todo"
 
                             console.log(`📦 Agregando evento: ${taskTitle} (${taskType}) para ${info.dateStr}`)
 
-                            addEventToDate(taskTitle, taskType as "todo" | "consult" | "review", info.dateStr)
+                            // Verificar que no existe ya este evento en esta fecha
+                            const existingEvents = mockEvents[info.dateStr] || []
+                            const isDuplicate = existingEvents.some((event) => event.title === taskTitle)
+
+                            if (!isDuplicate) {
+                                addEventToDate(taskTitle, taskType as "todo" | "consult" | "review", info.dateStr)
+                                console.log(`✅ Evento agregado exitosamente`)
+                            } else {
+                                console.log(`⚠️ Evento ya existe, no se duplicará`)
+                            }
 
                             // Remover el elemento arrastrado del DOM
                             info.draggedEl.remove()
                         },
-                        eventReceive: (info: EventReceiveInfo) => {
-                            console.log("📨 Event received:", info)
-                            addEventToDate(info.event.title, "todo", info.event.startStr)
-                        },
+                        // REMOVEMOS eventReceive para evitar duplicación
                         dateClick: (info: DateClickInfo) => {
                             const date = info.dateStr
                             const events = mockEvents[date] || []
@@ -498,14 +508,15 @@ export default function CalendarView() {
     return (
         <Box className={classes.root} onDrop={handleDrop} onDragOver={handleDragOver}>
             <div ref={calendarRef} className={classes.calendarContainer} />
+
             <Dialog
-            actions={actions}
-            content={content}
-            data-testid="events-dialog"
-            open={openModal}
-            title={title}
-            contentPadding="16px"
-            contentDividers
+                actions={actions}
+                content={content}
+                data-testid="events-dialog"
+                open={openModal}
+                title={title}
+                contentPadding="16px"
+                contentDividers
             />
         </Box>
     )
