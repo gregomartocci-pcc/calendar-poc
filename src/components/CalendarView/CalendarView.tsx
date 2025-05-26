@@ -199,6 +199,14 @@ export default function CalendarView() {
         ],
     })
 
+    // 👈 Usar useRef para mantener la referencia actualizada del estado
+    const mockEventsRef = useRef(mockEvents)
+
+    // Actualizar la referencia cuando cambie el estado
+    useEffect(() => {
+        mockEventsRef.current = mockEvents
+    }, [mockEvents])
+
     // Funciones para obtener colores según el tipo de tarea
     const getTaskBackgroundColor = (type: string): string => {
         switch (type) {
@@ -282,9 +290,17 @@ export default function CalendarView() {
         console.log(`✅ Evento agregado: ${title} para ${date}`)
     }
 
+    // 👈 Función para normalizar fechas y evitar problemas de zona horaria
+    const normalizeDate = (date: Date): string => {
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, "0")
+        const day = String(date.getDate()).padStart(2, "0")
+        return `${year}-${month}-${day}`
+    }
+
     // Formatear fecha para mostrar en el modal
     const formatDate = (dateStr: string): string => {
-        const date = new Date(dateStr)
+        const date = new Date(dateStr + "T00:00:00") // 👈 Agregar hora para evitar problemas de zona horaria
         return date.toLocaleDateString("es-ES", {
             weekday: "long",
             year: "numeric",
@@ -336,7 +352,7 @@ export default function CalendarView() {
                             console.log(`📦 Agregando evento: ${taskTitle} (${taskType}) para ${info.dateStr}`)
 
                             // Verificar que no existe ya este evento en esta fecha
-                            const existingEvents = mockEvents[info.dateStr] || []
+                            const existingEvents = mockEventsRef.current[info.dateStr] || []
                             const isDuplicate = existingEvents.some((event) => event.title === taskTitle)
 
                             if (!isDuplicate) {
@@ -349,23 +365,26 @@ export default function CalendarView() {
                             // Remover el elemento arrastrado del DOM
                             info.draggedEl.remove()
                         },
-                        // REMOVEMOS eventReceive para evitar duplicación
                         dateClick: (info: DateClickInfo) => {
-                            const date = info.dateStr
-                            const events = mockEvents[date] || []
-                            console.log(`🎯 Clicked on date: ${date}`)
-                            console.log(`📅 Found ${events.length} events:`, events)
+                            // 👈 Normalizar la fecha para evitar problemas de zona horaria
+                            const normalizedDate = normalizeDate(info.date)
+                            console.log(`🎯 Clicked on date: ${normalizedDate} (original: ${info.dateStr})`)
+                            console.log(`📊 Current mockEvents:`, mockEventsRef.current)
+
+                            // 👈 Usar la referencia actualizada del estado
+                            const events = mockEventsRef.current[normalizedDate] || []
+                            console.log(`📅 Found ${events.length} events for ${normalizedDate}:`, events)
 
                             setSelectedDateEvents(events)
-                            setSelectedDate(date)
+                            setSelectedDate(normalizedDate)
                             setOpenModal(true)
                         },
                         dayMaxEventRows: 3,
                         moreLinkClick: (info: any) => {
-                            const date = info.date.toISOString().split("T")[0]
-                            const events = mockEvents[date] || []
+                            const normalizedDate = normalizeDate(info.date)
+                            const events = mockEventsRef.current[normalizedDate] || []
                             setSelectedDateEvents(events)
-                            setSelectedDate(date)
+                            setSelectedDate(normalizedDate)
                             setOpenModal(true)
                         },
                     })
