@@ -13,7 +13,6 @@ import CalendarView from "./components/CalendarView/CalendarView"
 import { MUIKanbanBoard } from "./components/KanbanBoard/KanbanBoard"
 import { TaskFilters } from "./components/TaskFilters/TaskFilters"
 
-
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
@@ -24,97 +23,6 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     content: {
       padding: theme.spacing(2, 3),
-    },
-    header: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: theme.spacing(2),
-    },
-    title: {
-      fontWeight: "bold",
-    },
-    createButton: {
-      backgroundColor: "#0e766e",
-      color: "white",
-      "&:hover": {
-        backgroundColor: "#0c5e58",
-      },
-      textTransform: "uppercase",
-      fontWeight: "bold",
-      borderRadius: "4px",
-    },
-    tabContainer: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      borderBottom: "1px solid #e1e5e9",
-      backgroundColor: "transparent",
-      padding: theme.spacing(0, 2),
-    },
-    tabsLeft: {
-      display: "flex",
-    },
-    tab: {
-      padding: theme.spacing(1.5, 3),
-      cursor: "pointer",
-      fontSize: "14px",
-      fontWeight: 500,
-      textTransform: "uppercase",
-      position: "relative",
-      backgroundColor: "transparent",
-      border: "none",
-      "&:hover": {
-        backgroundColor: "rgba(0, 0, 0, 0.04)",
-      },
-    },
-    inactiveTab: {
-      color: "#6c757d",
-      backgroundColor: "transparent",
-    },
-    activeTab: {
-      color: "#17a2b8",
-      backgroundColor: "transparent",
-      "&::after": {
-        content: '""',
-        position: "absolute",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: "3px",
-        backgroundColor: "#17a2b8",
-      },
-    },
-    viewSelector: {
-      display: "flex",
-      alignItems: "center",
-      gap: "0px",
-      border: "1px solid #d1d5db",
-      borderRadius: "4px",
-      overflow: "hidden",
-    },
-    viewOption: {
-      padding: theme.spacing(0.75, 2),
-      fontSize: "14px",
-      fontWeight: 400,
-      cursor: "pointer",
-      backgroundColor: "#ffffff",
-      color: "#6c757d",
-      border: "none",
-      "&:hover": {
-        backgroundColor: "#f8f9fa",
-      },
-    },
-    borderOption: {
-      borderLeft: "1px solid #d1d5db",
-      borderRight: "1px solid #d1d5db",
-    },
-    activeViewOption: {
-      backgroundColor: "#17a2b8",
-      color: "#ffffff",
-      "&:hover": {
-        backgroundColor: "#138496",
-      },
     },
     mainContent: {
       padding: theme.spacing(2),
@@ -138,11 +46,10 @@ const useStyles = makeStyles((theme: Theme) =>
 function App() {
   const classes = useStyles()
   const [currentView, setCurrentView] = useState("board")
-  const [viewValue, setViewValue] = useState("board")
 
   const handleViewChange = (view: string) => {
+    console.log("Changing view to:", view)
     setCurrentView(view)
-    setViewValue(view)
   }
 
   const handleCreateTodo = () => {
@@ -177,8 +84,8 @@ function App() {
 
           <Box className={classes.content}>
             <Paper elevation={1}>
-              {/* Filtros agregados aquí - línea 202 aproximadamente */}
-              <TaskFilters onCreateTodo={handleCreateTodo} />
+              {/* Filtros con props para cambiar la vista */}
+              <TaskFilters onCreateTodo={handleCreateTodo} onViewChange={handleViewChange} currentView={currentView} />
 
               <Box className={classes.mainContent}>
                 <Box className={classes.contentLayout}>

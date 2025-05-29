@@ -165,11 +165,7 @@ export function Header() {
         <Box className={classes.headerContainer}>
             {/* PCC Header replacing AppBar */}
             <PCCHeader
-                headerText="PointClickCare"
-                style={{
-                    position: "static",
-                    zIndex: "auto",
-                }}
+                headerText
             >
                 <div className={classes.headerChildren}>
                     <FormControl className={classes.facilitySelect}>
