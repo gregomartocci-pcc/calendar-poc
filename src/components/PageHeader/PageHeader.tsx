@@ -20,11 +20,16 @@ const useStyles = makeStyles((theme) => ({
     tabsContainer: {
         backgroundColor: "#6c757d",
         minHeight: "40px",
+        display: "flex",
+        alignItems: "center",
     },
     tabs: {
         minHeight: "40px",
         "& .MuiTabs-indicator": {
             display: "none",
+        },
+        "& .MuiTabs-flexContainer": {
+            height: "40px",
         },
     },
     tab: {
@@ -32,11 +37,13 @@ const useStyles = makeStyles((theme) => ({
         fontSize: "14px",
         fontWeight: 500,
         minHeight: "40px",
-        padding: "8px 16px",
+        height: "40px",
+        padding: "0 24px",
         color: "#ffffff",
         backgroundColor: "#6c757d",
         borderRadius: "0",
         minWidth: "auto",
+        border: "none",
         "&.Mui-selected": {
             backgroundColor: "#17a2b8",
             color: "#ffffff",
@@ -72,7 +79,13 @@ export function PageHeader({ title = "To Do Dashboard", activeTab = 1, onTabChan
             <Typography className={classes.pageTitle}>{title}</Typography>
 
             <Box className={classes.tabsContainer}>
-                <Tabs value={value} onChange={handleChange} className={classes.tabs} variant="standard">
+                <Tabs
+                    value={value}
+                    onChange={handleChange}
+                    className={classes.tabs}
+                    variant="standard"
+                    TabIndicatorProps={{ style: { display: "none" } }}
+                >
                     <Tab label="Clinical Dashboard" className={classes.tab} />
                     <Tab label="To Do Dashboard" className={classes.tab} />
                 </Tabs>

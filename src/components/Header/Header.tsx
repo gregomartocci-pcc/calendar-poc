@@ -1,47 +1,22 @@
 "use client"
 
 import React, { useState } from "react"
-import {
-    AppBar,
-    Toolbar,
-    Typography,
-    Button,
-    Menu,
-    MenuItem,
-    Box,
-    IconButton,
-    Select,
-    FormControl,
-} from "@material-ui/core"
+import { Toolbar, Button, Menu, MenuItem, Box, IconButton, Select, FormControl } from "@material-ui/core"
 import { KeyboardArrowDown, Notifications, Help, AccountCircle } from "@material-ui/icons"
 import { makeStyles } from "@material-ui/core/styles"
+import { Header as PCCHeader } from "@evergreen/core-header"
 import { PageHeader } from "../PageHeader/PageHeader"
 
-
 const useStyles = makeStyles((theme) => ({
-    appBar: {
-        backgroundColor: "#ffffff",
-        color: "#000000",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-        position: "static",
-    },
-    topToolbar: {
-        minHeight: "56px",
-        borderBottom: "1px solid #e2e8f0",
-        paddingLeft: "24px",
-        paddingRight: "24px",
+    headerContainer: {
+        position: "relative",
+        zIndex: 1000,
     },
     bottomToolbar: {
-        minHeight: "48px",
+        minHeight: "50px",
         backgroundColor: "#f8f9fa",
         paddingLeft: "24px",
         paddingRight: "24px",
-    },
-    logo: {
-        fontWeight: 600,
-        color: "#2d3748",
-        fontSize: "16px",
-        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
     },
     facilitySelect: {
         minWidth: 220,
@@ -61,6 +36,7 @@ const useStyles = makeStyles((theme) => ({
     iconButton: {
         color: "#718096",
         padding: "6px",
+        marginLeft: theme.spacing(1),
     },
     navButton: {
         color: "#6c757d",
@@ -99,6 +75,18 @@ const useStyles = makeStyles((theme) => ({
             backgroundColor: "#f8f9fa",
             borderColor: "#adb5bd",
         },
+    },
+    flexGrow: {
+        flexGrow: 1,
+    },
+    navigationContainer: {
+        display: "flex",
+        alignItems: "center",
+    },
+    headerChildren: {
+        display: "flex",
+        alignItems: "center",
+        gap: theme.spacing(1),
     },
 }))
 
@@ -174,98 +162,108 @@ export function Header() {
     }
 
     return (
-        <Box>
-            <AppBar className={classes.appBar}>
-                {/* Top Header */}
-                <Toolbar className={classes.topToolbar}>
-                    <Typography className={classes.logo}>PointClickCare</Typography>
+        <Box className={classes.headerContainer}>
+            {/* PCC Header replacing AppBar */}
+            <PCCHeader
+                headerText="PointClickCare"
+                style={{
+                    position: "static",
+                    zIndex: "auto",
+                }}
+            >
+                <div className={classes.headerChildren}>
+                    <FormControl className={classes.facilitySelect}>
+                        <Select value="watersprings" displayEmpty IconComponent={KeyboardArrowDown}>
+                            <MenuItem value="watersprings">Watersprings Senior Living</MenuItem>
+                            <MenuItem value="oakview">Oakview Care Center</MenuItem>
+                            <MenuItem value="pinegrove">Pine Grove Assisted Living</MenuItem>
+                        </Select>
+                    </FormControl>
 
-                    <Box sx={{ flexGrow: 1 }} />
+                    <IconButton
+                        className={classes.iconButton}
+                        onClick={() => console.log("Notifications clicked")}
+                        aria-label="notifications"
+                    >
+                        <Notifications />
+                    </IconButton>
 
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                        <FormControl className={classes.facilitySelect}>
-                            <Select value="watersprings" displayEmpty IconComponent={KeyboardArrowDown}>
-                                <MenuItem value="watersprings">Watersprings Senior Living</MenuItem>
-                                <MenuItem value="oakview">Oakview Care Center</MenuItem>
-                                <MenuItem value="pinegrove">Pine Grove Assisted Living</MenuItem>
-                            </Select>
-                        </FormControl>
+                    <IconButton className={classes.iconButton} onClick={() => console.log("Help clicked")} aria-label="help">
+                        <Help />
+                    </IconButton>
 
-                        <IconButton className={classes.iconButton} onClick={() => console.log("Notifications clicked")}>
-                            <Notifications />
-                        </IconButton>
+                    <IconButton
+                        className={classes.iconButton}
+                        onClick={() => console.log("Account clicked")}
+                        aria-label="account"
+                    >
+                        <AccountCircle />
+                    </IconButton>
+                </div>
+            </PCCHeader>
 
-                        <IconButton className={classes.iconButton} onClick={() => console.log("Help clicked")}>
-                            <Help />
-                        </IconButton>
+            {/* Main Navigation */}
+            <Toolbar className={classes.bottomToolbar} style={{
+                marginTop: "65px"
+            }}>
+                <Box className={classes.navigationContainer}>
+                    {navigationItems.map((item) => (
+                        <React.Fragment key={item.label}>
+                            <Button
+                                className={item.isActive ? `${classes.navButton} ${classes.activeNavButton}` : classes.navButton}
+                                onClick={item.hasDropdown ? (e) => handleMenuOpen(e, item.label) : () => handleNavClick(item.label)}
+                                endIcon={item.hasDropdown ? <KeyboardArrowDown style={{ fontSize: "16px" }} /> : null}
+                            >
+                                {item.label}
+                            </Button>
 
-                        <IconButton className={classes.iconButton} onClick={() => console.log("Account clicked")}>
-                            <AccountCircle />
-                        </IconButton>
-                    </Box>
-                </Toolbar>
-
-                {/* Main Navigation */}
-                <Toolbar className={classes.bottomToolbar}>
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                        {navigationItems.map((item) => (
-                            <React.Fragment key={item.label}>
-                                <Button
-                                    className={item.isActive ? `${classes.navButton} ${classes.activeNavButton}` : classes.navButton}
-                                    onClick={item.hasDropdown ? (e) => handleMenuOpen(e, item.label) : () => handleNavClick(item.label)}
-                                    endIcon={item.hasDropdown ? <KeyboardArrowDown style={{ fontSize: "16px" }} /> : null}
+                            {item.hasDropdown && item.dropdownItems && (
+                                <Menu
+                                    anchorEl={anchorEls[item.label]}
+                                    open={Boolean(anchorEls[item.label])}
+                                    onClose={() => handleMenuClose(item.label)}
+                                    anchorOrigin={{
+                                        vertical: "bottom",
+                                        horizontal: "left",
+                                    }}
+                                    transformOrigin={{
+                                        vertical: "top",
+                                        horizontal: "left",
+                                    }}
+                                    getContentAnchorEl={null}
+                                    PaperProps={{
+                                        style: {
+                                            boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                                            border: "1px solid #e2e8f0",
+                                            borderRadius: "4px",
+                                            marginTop: "0px",
+                                        },
+                                    }}
                                 >
-                                    {item.label}
-                                </Button>
+                                    {item.dropdownItems.map((dropdownItem) => (
+                                        <MenuItem
+                                            key={dropdownItem}
+                                            onClick={() => handleMenuItemClick(item.label, dropdownItem)}
+                                            style={{
+                                                fontSize: "14px",
+                                                padding: "8px 16px",
+                                            }}
+                                        >
+                                            {dropdownItem}
+                                        </MenuItem>
+                                    ))}
+                                </Menu>
+                            )}
+                        </React.Fragment>
+                    ))}
+                </Box>
 
-                                {item.hasDropdown && item.dropdownItems && (
-                                    <Menu
-                                        anchorEl={anchorEls[item.label]}
-                                        open={Boolean(anchorEls[item.label])}
-                                        onClose={() => handleMenuClose(item.label)}
-                                        anchorOrigin={{
-                                            vertical: "bottom",
-                                            horizontal: "left",
-                                        }}
-                                        transformOrigin={{
-                                            vertical: "top",
-                                            horizontal: "left",
-                                        }}
-                                        getContentAnchorEl={null}
-                                        PaperProps={{
-                                            style: {
-                                                boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-                                                border: "1px solid #e2e8f0",
-                                                borderRadius: "4px",
-                                                marginTop: "0px",
-                                            },
-                                        }}
-                                    >
-                                        {item.dropdownItems.map((dropdownItem) => (
-                                            <MenuItem
-                                                key={dropdownItem}
-                                                onClick={() => handleMenuItemClick(item.label, dropdownItem)}
-                                                style={{
-                                                    fontSize: "14px",
-                                                    padding: "8px 16px",
-                                                }}
-                                            >
-                                                {dropdownItem}
-                                            </MenuItem>
-                                        ))}
-                                    </Menu>
-                                )}
-                            </React.Fragment>
-                        ))}
-                    </Box>
+                <Box className={classes.flexGrow} />
 
-                    <Box sx={{ flexGrow: 1 }} />
-
-                    <Button className={classes.searchButton} onClick={handleSearchClick}>
-                        Search
-                    </Button>
-                </Toolbar>
-            </AppBar>
+                <Button className={classes.searchButton} onClick={handleSearchClick}>
+                    Search
+                </Button>
+            </Toolbar>
 
             {/* Page Header with Title and Tabs */}
             <PageHeader title="To Do Dashboard" activeTab={1} onTabChange={handleTabChange} />
