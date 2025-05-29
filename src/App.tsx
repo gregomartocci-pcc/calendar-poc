@@ -1,6 +1,6 @@
 "use client"
 
-import { Box, Paper, Typography, Button } from "@material-ui/core"
+import { Box, Paper, Typography } from "@material-ui/core"
 import { makeStyles, createStyles, type Theme, ThemeProvider } from "@material-ui/core/styles"
 import { theme } from "@evergreen/core"
 import { useState } from "react"
@@ -8,9 +8,11 @@ import { Header } from "./components/Header/Header"
 
 import { TaskProvider } from "./contexts/TasksContext"
 import { Sidebar } from "./Siderbar/Sidebar"
-import { TaskFilters } from "./components/TasksFilters/TasksFilters"
+
 import CalendarView from "./components/CalendarView/CalendarView"
 import { MUIKanbanBoard } from "./components/KanbanBoard/KanbanBoard"
+import { TaskFilters } from "./components/TaskFilters/TaskFilters"
+
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -135,12 +137,17 @@ const useStyles = makeStyles((theme: Theme) =>
 
 function App() {
   const classes = useStyles()
-  const [currentView, setCurrentView] = useState("board") // Cambiado a "board" por defecto
-  const [viewValue, setViewValue] = useState("board") // Estado para el selector de vista
+  const [currentView, setCurrentView] = useState("board")
+  const [viewValue, setViewValue] = useState("board")
 
   const handleViewChange = (view: string) => {
     setCurrentView(view)
     setViewValue(view)
+  }
+
+  const handleCreateTodo = () => {
+    console.log("Creating new TO DO...")
+    // Aquí puedes agregar la lógica para crear una nueva tarea
   }
 
   const renderView = () => {
@@ -163,57 +170,26 @@ function App() {
 
   return (
     <ThemeProvider theme={theme}>
-      <Box className={classes.root}>
-        {/* Header superior */}
-        <Header />
+      <TaskProvider>
+        <Box className={classes.root}>
+          {/* Header superior */}
+          <Header />
 
-        {/* MainNavigation debajo del header */}
+          <Box className={classes.content}>
+            <Paper elevation={1}>
+              {/* Filtros agregados aquí - línea 202 aproximadamente */}
+              <TaskFilters onCreateTodo={handleCreateTodo} />
 
-        <Box className={classes.content}>
-
-          <Paper elevation={1}>
-            <Box className={classes.tabContainer}>
-              <Box className={classes.tabsLeft}>
-                <Box className={`${classes.tab} ${classes.inactiveTab}`}>Team</Box>
-                <Box className={`${classes.tab} ${classes.activeTab}`}>Clinical</Box>
-              </Box>
-
-              <div className={classes.viewSelector}>
-                <div
-                  className={`${classes.viewOption} ${viewValue === "list" ? classes.activeViewOption : ""}`}
-                  onClick={() => handleViewChange("list")}
-                >
-                  List
-                </div>
-                <div
-                  className={`${classes.viewOption} ${classes.borderOption} ${viewValue === "board" ? classes.activeViewOption : ""}`}
-                  onClick={() => handleViewChange("board")}
-                >
-                  Board
-                </div>
-                <div
-                  className={`${classes.viewOption} ${viewValue === "calendar" ? classes.activeViewOption : ""}`}
-                  onClick={() => handleViewChange("calendar")}
-                >
-                  Calendar
-                </div>
-              </div>
-            </Box>
-
-            <Box className={classes.mainContent}>
-              <TaskProvider>
+              <Box className={classes.mainContent}>
                 <Box className={classes.contentLayout}>
                   <Sidebar />
-                  <Box className={classes.rightContent}>
-
-                    {renderView()}
-                  </Box>
+                  <Box className={classes.rightContent}>{renderView()}</Box>
                 </Box>
-              </TaskProvider>
-            </Box>
-          </Paper>
+              </Box>
+            </Paper>
+          </Box>
         </Box>
-      </Box>
+      </TaskProvider>
     </ThemeProvider>
   )
 }
