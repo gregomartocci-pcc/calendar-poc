@@ -1,10 +1,8 @@
 "use client"
 import { useRef, useEffect } from "react"
-import { Box, Typography, Paper, Divider, Avatar, Tooltip } from "@material-ui/core"
+import { Box, Typography, Paper, Avatar } from "@material-ui/core"
 import { makeStyles, type Theme, createStyles } from "@material-ui/core/styles"
-import { DragIndicator } from "@material-ui/icons"
 import { useTaskContext } from "../contexts/TasksContext"
-
 
 interface TaskRefs {
     [key: string]: HTMLDivElement | null
@@ -18,69 +16,59 @@ const useStyles = makeStyles((theme: Theme) =>
                 width: 320,
             },
             flexShrink: 0,
+            padding: theme.spacing(2),
+            backgroundColor: "#f8f9fa",
+            minHeight: "100vh",
         },
         title: {
-            marginBottom: theme.spacing(2),
-        },
-        infoBox: {
-            marginBottom: theme.spacing(2),
-            padding: theme.spacing(2),
-            backgroundColor: "#f3f4f6",
-            borderRadius: "4px",
-        },
-        infoText: {
-            display: "flex",
-            alignItems: "center",
-            gap: theme.spacing(1),
+            fontSize: "18px",
+            fontWeight: 500,
+            color: "#333",
+            marginBottom: theme.spacing(3),
+            paddingLeft: theme.spacing(1),
         },
         taskCard: {
             padding: theme.spacing(2),
             marginBottom: theme.spacing(2),
-            border: "1px solid #e0e0e0",
-            borderRadius: "4px",
+            backgroundColor: "white",
+            borderRadius: "8px",
+            border: "1px solid #e5e7eb",
             position: "relative",
             transition: "all 0.2s ease",
             cursor: "grab",
+            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
             "&:hover": {
-                boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-                borderColor: "#0e766e",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                transform: "translateY(-1px)",
             },
             "&:active": {
                 cursor: "grabbing",
             },
         },
-        dragIndicator: {
-            position: "absolute",
-            top: "8px",
-            right: "8px",
-            cursor: "grab",
-            color: "#0e766e",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "4px",
-            borderRadius: "4px",
-            backgroundColor: "rgba(14, 118, 110, 0.1)",
-            "&:hover": {
-                backgroundColor: "rgba(14, 118, 110, 0.2)",
-            },
-        },
         taskTitle: {
-            marginBottom: theme.spacing(1),
-            fontWeight: "bold",
-            paddingRight: theme.spacing(5),
+            fontSize: "16px",
+            fontWeight: 600,
+            color: "#1f2937",
+            marginBottom: theme.spacing(2),
         },
         taskDetail: {
             display: "flex",
             justifyContent: "space-between",
-            marginTop: theme.spacing(1),
+            alignItems: "center",
             marginBottom: theme.spacing(1),
+            "&:last-child": {
+                marginBottom: 0,
+            },
         },
         detailLabel: {
-            color: theme.palette.text.secondary,
+            fontSize: "14px",
+            color: "#6b7280",
+            fontWeight: 500,
         },
-        divider: {
-            margin: theme.spacing(2, 0),
+        detailValue: {
+            fontSize: "14px",
+            color: "#1f2937",
+            fontWeight: 500,
         },
         patientInfo: {
             display: "flex",
@@ -90,11 +78,19 @@ const useStyles = makeStyles((theme: Theme) =>
         avatar: {
             width: 24,
             height: 24,
+            fontSize: "12px",
+            backgroundColor: "#e5e7eb",
+            color: "#374151",
+        },
+        patientName: {
+            fontSize: "14px",
+            color: "#1f2937",
+            fontWeight: 500,
         },
         dragging: {
             opacity: 0.5,
             transform: "scale(1.02)",
-            boxShadow: "0 8px 16px rgba(0,0,0,0.1) !important",
+            boxShadow: "0 8px 16px rgba(0,0,0,0.2) !important",
         },
     }),
 )
@@ -193,16 +189,7 @@ export function Sidebar() {
 
     return (
         <Box className={classes.root}>
-            <Typography variant="h6" className={classes.title}>
-                Not Scheduled
-            </Typography>
-
-            <Box className={classes.infoBox}>
-                <Typography variant="body2" className={classes.infoText}>
-                    <DragIndicator />
-                    Drag task to calendar
-                </Typography>
-            </Box>
+            <Typography className={classes.title}>Not Scheduled</Typography>
 
             <div id="draggable-container">
                 {unscheduledTasks.map((task) => (
@@ -211,60 +198,37 @@ export function Sidebar() {
                         ref={(el: HTMLDivElement | null) => (taskRefs.current[task.id] = el)}
                         className={`${classes.taskCard} task-card`}
                         data-task-id={task.id}
-                    // REMOVEMOS completamente los manejadores nativos de HTML5
-                    // draggable={true}
-                    // onDragStart={...}
-                    // onDragEnd={...}
+                        elevation={0}
                     >
-                        <Tooltip title="Drag this task to the calendar">
-                            <Box className={classes.dragIndicator}>
-                                <DragIndicator />
-                            </Box>
-                        </Tooltip>
+                        <Typography className={classes.taskTitle}>{task.title}</Typography>
 
-                        <Typography variant="h6" className={classes.taskTitle}>
-                            {task.title}
-                        </Typography>
-                        <Box>
-                            <Box className={classes.taskDetail}>
-                                <Typography variant="body2" className={classes.detailLabel}>
-                                    Due Date
-                                </Typography>
-                                <Typography variant="body2">{task.dueDate || "--"}</Typography>
-                            </Box>
-                            <Box className={classes.taskDetail}>
-                                <Typography variant="body2" className={classes.detailLabel}>
-                                    Type
-                                </Typography>
-                                <Typography variant="body2" style={{ textTransform: "capitalize" }}>
-                                    {task.type}
-                                </Typography>
-                            </Box>
-                            <Box className={classes.taskDetail}>
-                                <Typography variant="body2" className={classes.detailLabel}>
-                                    Facility
-                                </Typography>
-                                <Typography variant="body2">{task.facility || "--"}</Typography>
-                            </Box>
-                            <Box className={classes.taskDetail}>
-                                <Typography variant="body2" className={classes.detailLabel}>
-                                    Assignee
-                                </Typography>
-                                <Typography variant="body2">{task.assignee || "--"}</Typography>
-                            </Box>
+                        <Box className={classes.taskDetail}>
+                            <Typography className={classes.detailLabel}>Schedule Date</Typography>
+                            <Typography className={classes.detailValue}>--</Typography>
+                        </Box>
 
-                            <Divider className={classes.divider} />
+                        <Box className={classes.taskDetail}>
+                            <Typography className={classes.detailLabel}>Due Date</Typography>
+                            <Typography className={classes.detailValue}>{task.dueDate || "--"}</Typography>
+                        </Box>
 
-                            <Box className={classes.taskDetail}>
-                                <Typography variant="body2" className={classes.detailLabel}>
-                                    Patient
-                                </Typography>
-                                <Box className={classes.patientInfo}>
-                                    <Avatar className={classes.avatar}>
-                                        {task.patient ? task.patient.substring(0, 2).toUpperCase() : "?"}
-                                    </Avatar>
-                                    <Typography variant="body2">{task.patient || "Unknown"}</Typography>
-                                </Box>
+                        <Box className={classes.taskDetail}>
+                            <Typography className={classes.detailLabel}>Facility</Typography>
+                            <Typography className={classes.detailValue}>{task.facility || "--"}</Typography>
+                        </Box>
+
+                        <Box className={classes.taskDetail}>
+                            <Typography className={classes.detailLabel}>Assignee</Typography>
+                            <Typography className={classes.detailValue}>{task.assignee || "--"}</Typography>
+                        </Box>
+
+                        <Box className={classes.taskDetail}>
+                            <Typography className={classes.detailLabel}>Patient</Typography>
+                            <Box className={classes.patientInfo}>
+                                <Avatar className={classes.avatar}>
+                                    {task.patient ? task.patient.substring(0, 2).toUpperCase() : "?"}
+                                </Avatar>
+                                <Typography className={classes.patientName}>{task.patient || "Unknown"}</Typography>
                             </Box>
                         </Box>
                     </Paper>

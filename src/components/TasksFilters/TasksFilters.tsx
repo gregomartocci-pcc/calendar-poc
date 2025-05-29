@@ -17,8 +17,7 @@ import {
     type Theme,
 } from "@material-ui/core"
 import { Close as CloseIcon } from "@material-ui/icons"
-import { TaskType, useTaskContext } from "../../contexts/TasksContext"
-
+import { type TaskType, useTaskContext } from "../../contexts/TasksContext"
 
 // Definir interfaces para los eventos
 interface TabPanelProps {
@@ -26,6 +25,9 @@ interface TabPanelProps {
     index: number
     value: number
 }
+
+// Removemos la prop onViewChange ya que no necesitamos el selector de vista
+type TaskFiltersProps = {}
 
 // Crear estilos con makeStyles
 const useStyles = makeStyles((theme: Theme) =>
@@ -65,20 +67,6 @@ const useStyles = makeStyles((theme: Theme) =>
         activeTab: {
             color: "#0e766e",
         },
-        viewSelector: {
-            display: "flex",
-            border: "1px solid #e0e0e0",
-            borderRadius: "4px",
-            overflow: "hidden",
-        },
-        viewOption: {
-            padding: theme.spacing(1, 2),
-            cursor: "pointer",
-        },
-        activeViewOption: {
-            backgroundColor: "#0e766e",
-            color: "white",
-        },
         filtersGrid: {
             display: "grid",
             gridTemplateColumns: "1fr",
@@ -109,10 +97,6 @@ const useStyles = makeStyles((theme: Theme) =>
             backgroundColor: "#f3f4f6",
             color: "#374151",
         },
-        borderOption: {
-            borderLeft: "1px solid #e0e0e0",
-            borderRight: "1px solid #e0e0e0",
-        },
     }),
 )
 
@@ -139,11 +123,10 @@ function a11yProps(index: number) {
     }
 }
 
-export function TaskFilters() {
+export function TaskFilters({ }: TaskFiltersProps) {
     const classes = useStyles()
     const { scheduledTasks } = useTaskContext()
     const [tabValue, setTabValue] = useState<number>(1)
-    const [viewValue, setViewValue] = useState<string>("calendar")
     const [facility, setFacility] = useState<string>("watersprings")
     const [dueDate, setDueDate] = useState<string>("all")
     const [assignees, setAssignees] = useState<string[]>(["Me", "Practitioner"])
@@ -157,10 +140,6 @@ export function TaskFilters() {
 
     const handleTabChange = (_event: React.ChangeEvent<{}>, newValue: number): void => {
         setTabValue(newValue)
-    }
-
-    const handleViewChange = (view: string): void => {
-        setViewValue(view)
     }
 
     const handleFacilityChange = (event: React.ChangeEvent<{ value: unknown }>): void => {
@@ -188,35 +167,11 @@ export function TaskFilters() {
     return (
         <div className={classes.root}>
             <div className={classes.tabsContainer}>
-                <Tabs value={tabValue} onChange={handleTabChange} aria-label="team tabs" className={classes.tabs}>
-                    <Tab label="TEAM" {...a11yProps(0)} className={`${classes.tab} ${tabValue === 0 ? classes.activeTab : ""}`} />
-                    <Tab
-                        label="PERSONAL"
-                        {...a11yProps(1)}
-                        className={`${classes.tab} ${tabValue === 1 ? classes.activeTab : ""}`}
-                    />
+                <Tabs value={tabValue} onChange={handleTabChange} aria-label="task filter tabs" className={classes.tabs}>
+                    <Tab label="All Tasks" {...a11yProps(0)} className={classes.tab} />
+                    <Tab label="My Tasks" {...a11yProps(1)} className={classes.tab} />
                 </Tabs>
-
-                <div className={classes.viewSelector}>
-                    <div
-                        className={`${classes.viewOption} ${viewValue === "list" ? classes.activeViewOption : ""}`}
-                        onClick={() => handleViewChange("list")}
-                    >
-                        List
-                    </div>
-                    <div
-                        className={`${classes.viewOption} ${classes.borderOption} ${viewValue === "board" ? classes.activeViewOption : ""}`}
-                        onClick={() => handleViewChange("board")}
-                    >
-                        Board
-                    </div>
-                    <div
-                        className={`${classes.viewOption} ${viewValue === "calendar" ? classes.activeViewOption : ""}`}
-                        onClick={() => handleViewChange("calendar")}
-                    >
-                        Calendar
-                    </div>
-                </div>
+                {/* Removido el selector de vista (List, Board, Calendar) */}
             </div>
 
             <TabPanel value={tabValue} index={0}>

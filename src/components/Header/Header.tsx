@@ -1,111 +1,274 @@
-import React from 'react';
-import { AppBar, Toolbar, Typography, IconButton, InputBase, Select, MenuItem, FormControl } from '@material-ui/core';
-import { alpha, makeStyles } from '@material-ui/core/styles';
-import { Notifications, Help, AccountCircle, Search as SearchIcon } from '@material-ui/icons';
+"use client"
+
+import React, { useState } from "react"
+import {
+    AppBar,
+    Toolbar,
+    Typography,
+    Button,
+    Menu,
+    MenuItem,
+    Box,
+    IconButton,
+    Select,
+    FormControl,
+} from "@material-ui/core"
+import { KeyboardArrowDown, Notifications, Help, AccountCircle } from "@material-ui/icons"
+import { makeStyles } from "@material-ui/core/styles"
+import { PageHeader } from "../PageHeader/PageHeader"
+
 
 const useStyles = makeStyles((theme) => ({
-    grow: {
-        flexGrow: 1,
+    appBar: {
+        backgroundColor: "#ffffff",
+        color: "#000000",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+        position: "static",
     },
-    title: {
-        fontWeight: 'bold',
+    topToolbar: {
+        minHeight: "56px",
+        borderBottom: "1px solid #e2e8f0",
+        paddingLeft: "24px",
+        paddingRight: "24px",
     },
-    search: {
-        position: 'relative',
-        borderRadius: theme.shape.borderRadius,
-        backgroundColor: alpha(theme.palette.common.white, 0.15),
-        '&:hover': {
-            backgroundColor: alpha(theme.palette.common.white, 0.25),
-        },
-        marginLeft: 0,
-        width: '100%',
-        [theme.breakpoints.up('sm')]: {
-            marginLeft: theme.spacing(1),
-            width: 'auto',
-        },
-        border: '1px solid #e5e7eb',
+    bottomToolbar: {
+        minHeight: "48px",
+        backgroundColor: "#f8f9fa",
+        paddingLeft: "24px",
+        paddingRight: "24px",
     },
-    searchIcon: {
-        padding: theme.spacing(0, 2),
-        height: '100%',
-        position: 'absolute',
-        pointerEvents: 'none',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+    logo: {
+        fontWeight: 600,
+        color: "#2d3748",
+        fontSize: "16px",
+        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
     },
-    inputRoot: {
-        color: 'inherit',
-    },
-    inputInput: {
-        padding: theme.spacing(1, 1, 1, 0),
-        paddingLeft: `calc(1em + ${theme.spacing(4)}px)`,
-        transition: theme.transitions.create('width'),
-        width: '100%',
-        [theme.breakpoints.up('sm')]: {
-            width: '12ch',
-            '&:focus': {
-                width: '20ch',
+    facilitySelect: {
+        minWidth: 220,
+        "& .MuiOutlinedInput-root": {
+            backgroundColor: "transparent",
+            border: "none",
+            "& fieldset": {
+                border: "none",
             },
         },
-    },
-    formControl: {
-        minWidth: 220,
-    },
-    appBar: {
-        backgroundColor: 'white',
-        color: 'inherit',
-        boxShadow: 'none',
-        borderBottom: '1px solid #e5e7eb',
+        "& .MuiSelect-select": {
+            fontWeight: 500,
+            color: "#4a5568",
+            fontSize: "14px",
+        },
     },
     iconButton: {
-        marginLeft: theme.spacing(1),
+        color: "#718096",
+        padding: "6px",
     },
-}));
+    navButton: {
+        color: "#6c757d",
+        textTransform: "none",
+        fontSize: "14px",
+        fontWeight: 400,
+        padding: "12px 16px",
+        minWidth: "auto",
+        borderRadius: 0,
+        height: "48px",
+        borderBottom: "3px solid transparent",
+        "&:hover": {
+            backgroundColor: "transparent",
+            color: "#495057",
+        },
+    },
+    activeNavButton: {
+        color: "#495057",
+        backgroundColor: "transparent",
+        fontWeight: 500,
+        borderBottom: "3px solid #17a2b8",
+        "&:hover": {
+            backgroundColor: "transparent",
+        },
+    },
+    searchButton: {
+        color: "#6c757d",
+        textTransform: "none",
+        fontSize: "14px",
+        fontWeight: 400,
+        padding: "6px 16px",
+        border: "1px solid #ced4da",
+        borderRadius: "4px",
+        backgroundColor: "#ffffff",
+        "&:hover": {
+            backgroundColor: "#f8f9fa",
+            borderColor: "#adb5bd",
+        },
+    },
+}))
+
+interface NavigationItem {
+    label: string
+    hasDropdown: boolean
+    isActive?: boolean
+    dropdownItems?: string[]
+}
+
+const navigationItems: NavigationItem[] = [
+    {
+        label: "Home",
+        hasDropdown: true,
+        dropdownItems: ["Dashboard", "Quick Actions", "Recent Items"],
+    },
+    {
+        label: "Billing",
+        hasDropdown: true,
+        dropdownItems: ["Invoices", "Payments", "Billing Reports", "Payment Settings"],
+    },
+    {
+        label: "Care Services",
+        hasDropdown: true,
+        isActive: true,
+        dropdownItems: ["Care Plans", "Assessments", "Medications", "Progress Notes", "To Do Dashboard"],
+    },
+    {
+        label: "Insights",
+        hasDropdown: false,
+    },
+    {
+        label: "Reports",
+        hasDropdown: false,
+    },
+]
 
 export function Header() {
-    const classes = useStyles();
+    const classes = useStyles()
+    const [anchorEls, setAnchorEls] = useState<{ [key: string]: HTMLElement | null }>({})
+
+    const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, label: string) => {
+        setAnchorEls((prev) => ({
+            ...prev,
+            [label]: event.currentTarget,
+        }))
+    }
+
+    const handleMenuClose = (label: string) => {
+        setAnchorEls((prev) => ({
+            ...prev,
+            [label]: null,
+        }))
+    }
+
+    const handleMenuItemClick = (parentLabel: string, itemLabel: string) => {
+        console.log(`Navigation: ${parentLabel} -> ${itemLabel}`)
+        handleMenuClose(parentLabel)
+    }
+
+    const handleNavClick = (label: string) => {
+        if (label === "Insights" || label === "Reports") {
+            console.log(`Navigate to: ${label}`)
+        }
+    }
+
+    const handleSearchClick = () => {
+        console.log("Search clicked")
+    }
+
+    const handleTabChange = (newValue: number) => {
+        console.log(`Tab changed to: ${newValue === 0 ? "Clinical Dashboard" : "To Do Dashboard"}`)
+    }
 
     return (
-        <AppBar position="static" className={classes.appBar}>
-            <Toolbar>
-                <Typography variant="h6" className={classes.title}>
-                    PointClickCare
-                </Typography>
-                <div className={classes.grow} />
+        <Box>
+            <AppBar className={classes.appBar}>
+                {/* Top Header */}
+                <Toolbar className={classes.topToolbar}>
+                    <Typography className={classes.logo}>PointClickCare</Typography>
 
-                <FormControl variant="outlined" size="small" className={classes.formControl}>
-                    <Select defaultValue="watersprings" displayEmpty>
-                        <MenuItem value="watersprings">Watersprings Senior Living</MenuItem>
-                        <MenuItem value="oakview">Oakview Care Center</MenuItem>
-                        <MenuItem value="pinegrove">Pine Grove Assisted Living</MenuItem>
-                    </Select>
-                </FormControl>
+                    <Box sx={{ flexGrow: 1 }} />
 
-                <IconButton color="inherit" className={classes.iconButton}>
-                    <Notifications />
-                </IconButton>
-                <IconButton color="inherit" className={classes.iconButton}>
-                    <Help />
-                </IconButton>
-                <IconButton color="inherit" className={classes.iconButton}>
-                    <AccountCircle />
-                </IconButton>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                        <FormControl className={classes.facilitySelect}>
+                            <Select value="watersprings" displayEmpty IconComponent={KeyboardArrowDown}>
+                                <MenuItem value="watersprings">Watersprings Senior Living</MenuItem>
+                                <MenuItem value="oakview">Oakview Care Center</MenuItem>
+                                <MenuItem value="pinegrove">Pine Grove Assisted Living</MenuItem>
+                            </Select>
+                        </FormControl>
 
-                <div className={classes.search}>
-                    <div className={classes.searchIcon}>
-                        <SearchIcon />
-                    </div>
-                    <InputBase
-                        placeholder="Search…"
-                        classes={{
-                            root: classes.inputRoot,
-                            input: classes.inputInput,
-                        }}
-                        inputProps={{ 'aria-label': 'search' }}
-                    />
-                </div>
-            </Toolbar>
-        </AppBar>
-    );
+                        <IconButton className={classes.iconButton} onClick={() => console.log("Notifications clicked")}>
+                            <Notifications />
+                        </IconButton>
+
+                        <IconButton className={classes.iconButton} onClick={() => console.log("Help clicked")}>
+                            <Help />
+                        </IconButton>
+
+                        <IconButton className={classes.iconButton} onClick={() => console.log("Account clicked")}>
+                            <AccountCircle />
+                        </IconButton>
+                    </Box>
+                </Toolbar>
+
+                {/* Main Navigation */}
+                <Toolbar className={classes.bottomToolbar}>
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                        {navigationItems.map((item) => (
+                            <React.Fragment key={item.label}>
+                                <Button
+                                    className={item.isActive ? `${classes.navButton} ${classes.activeNavButton}` : classes.navButton}
+                                    onClick={item.hasDropdown ? (e) => handleMenuOpen(e, item.label) : () => handleNavClick(item.label)}
+                                    endIcon={item.hasDropdown ? <KeyboardArrowDown style={{ fontSize: "16px" }} /> : null}
+                                >
+                                    {item.label}
+                                </Button>
+
+                                {item.hasDropdown && item.dropdownItems && (
+                                    <Menu
+                                        anchorEl={anchorEls[item.label]}
+                                        open={Boolean(anchorEls[item.label])}
+                                        onClose={() => handleMenuClose(item.label)}
+                                        anchorOrigin={{
+                                            vertical: "bottom",
+                                            horizontal: "left",
+                                        }}
+                                        transformOrigin={{
+                                            vertical: "top",
+                                            horizontal: "left",
+                                        }}
+                                        getContentAnchorEl={null}
+                                        PaperProps={{
+                                            style: {
+                                                boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                                                border: "1px solid #e2e8f0",
+                                                borderRadius: "4px",
+                                                marginTop: "0px",
+                                            },
+                                        }}
+                                    >
+                                        {item.dropdownItems.map((dropdownItem) => (
+                                            <MenuItem
+                                                key={dropdownItem}
+                                                onClick={() => handleMenuItemClick(item.label, dropdownItem)}
+                                                style={{
+                                                    fontSize: "14px",
+                                                    padding: "8px 16px",
+                                                }}
+                                            >
+                                                {dropdownItem}
+                                            </MenuItem>
+                                        ))}
+                                    </Menu>
+                                )}
+                            </React.Fragment>
+                        ))}
+                    </Box>
+
+                    <Box sx={{ flexGrow: 1 }} />
+
+                    <Button className={classes.searchButton} onClick={handleSearchClick}>
+                        Search
+                    </Button>
+                </Toolbar>
+            </AppBar>
+
+            {/* Page Header with Title and Tabs */}
+            <PageHeader title="To Do Dashboard" activeTab={1} onTabChange={handleTabChange} />
+        </Box>
+    )
 }
