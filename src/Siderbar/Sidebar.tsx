@@ -222,6 +222,7 @@ export function Sidebar() {
                             <Typography className={classes.detailValue}>{task.assignee || "--"}</Typography>
                         </Box>
 
+
                         <Box className={classes.taskDetail}>
                             <Typography className={classes.detailLabel}>Patient</Typography>
                             <Box className={classes.patientInfo}>
