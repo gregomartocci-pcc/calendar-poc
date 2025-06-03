@@ -43,41 +43,43 @@ const useStyles = makeStyles((theme: Theme) =>
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            marginBottom: theme.spacing(2),
             borderBottom: "1px solid #e0e0e0",
-            paddingBottom: theme.spacing(1),
-            paddingLeft: theme.spacing(3), // 🎯 PADDING IZQUIERDO
-            paddingRight: theme.spacing(3), // 🎯 PADDING DERECHO
+            paddingLeft: theme.spacing(3),
+            paddingRight: theme.spacing(3),
         },
         tabs: {
             "& .MuiTabs-indicator": {
                 backgroundColor: "#0e766e",
-                height: "3px",
+                height: "2px",
             },
-            minHeight: "36px",
+            minHeight: "48px",
         },
         tab: {
-            fontWeight: "bold",
-            color: "inherit",
-            minHeight: "36px",
+            fontWeight: 500,
+            color: "#6B7280",
+            minHeight: "48px",
             padding: theme.spacing(0, 3),
-            textTransform: "uppercase",
+            textTransform: "none",
             fontSize: "14px",
             letterSpacing: "0.5px",
+            "&.Mui-selected": {
+                color: "#0e766e",
+                fontWeight: 600,
+            },
         },
         viewButtons: {
             display: "flex",
-            gap: theme.spacing(0.5),
+            gap: theme.spacing(1),
         },
         viewButton: {
-            minWidth: "auto",
-            padding: theme.spacing(0.5, 2),
+            minWidth: "80px",
+            padding: theme.spacing(0.75, 2),
             fontSize: "14px",
             textTransform: "none",
             borderRadius: "4px",
             border: "1px solid #e0e0e0",
             backgroundColor: "white",
-            color: "#666",
+            color: "#6B7280",
             "&:hover": {
                 backgroundColor: "#f5f5f5",
             },
@@ -98,6 +100,7 @@ const useStyles = makeStyles((theme: Theme) =>
             justifyContent: "space-between", // Para separar filtros del botón
             paddingLeft: theme.spacing(3), // 🎯 PADDING IZQUIERDO
             paddingRight: theme.spacing(3), // 🎯 PADDING DERECHO
+            paddingTop: theme.spacing(3), // 🎯 AGREGAR ESPACIO SUPERIOR
             paddingBottom: theme.spacing(2), // Un poco de espacio abajo
         },
         filtersSection: {
@@ -223,8 +226,8 @@ export function TaskFilters({ onCreateTodo, onViewChange, currentView }: TaskFil
             {/* 🎯 PRIMERA FILA: SOLO TABS + VIEW SELECTOR */}
             <div className={classes.topRow}>
                 <Tabs value={tabValue} onChange={handleTabChange} aria-label="task filter tabs" className={classes.tabs}>
-                    <Tab label="TEAM" {...a11yProps(0)} className={classes.tab} />
-                    <Tab label="PERSONAL" {...a11yProps(1)} className={classes.tab} />
+                    <Tab label={<Typography variant="body2">TEAM</Typography>} {...a11yProps(0)} className={classes.tab} />
+                    <Tab label={<Typography variant="body2">PERSONAL</Typography>} {...a11yProps(1)} className={classes.tab} />
                 </Tabs>
 
                 {/* SOLO VIEW SELECTOR BUTTONS - SIN CREATE BUTTON */}
@@ -276,21 +279,45 @@ export function TaskFilters({ onCreateTodo, onViewChange, currentView }: TaskFil
 
                         <div className={classes.filterGroup}>
                             <Typography variant="caption.medium" className={classes.filterLabel}>
-                                Task Type
+                                Assignee
                             </Typography>
                             <FormControl fullWidth size="small">
-                                <Select value={taskType} onChange={handleTaskTypeChange} displayEmpty className={classes.select}>
-                                    <MenuItem value="">
-                                        <Typography variant="body2">All Types</Typography>
+                                <Select
+                                    multiple
+                                    value={assignees}
+                                    onChange={(event) => {
+                                        const value = event.target.value as string[]
+                                        setAssignees(value)
+                                        filterTasks((taskType as TaskType) || undefined, value[0], facility)
+                                    }}
+                                    displayEmpty
+                                    className={classes.select}
+                                    renderValue={(selected) => (
+                                        <div className={classes.chipContainer} style={{ border: "none", padding: 0, minHeight: "auto" }}>
+                                            {(selected as string[]).map((value) => (
+                                                <Chip
+                                                    key={value}
+                                                    label={<Typography variant="caption">{value}</Typography>}
+                                                    size="small"
+                                                    onDelete={() => handleRemoveAssignee(value)}
+                                                    deleteIcon={<CloseIcon fontSize="small" />}
+                                                    className={classes.chip}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
+                                >
+                                    <MenuItem value="Me">
+                                        <Typography variant="body2">Me</Typography>
                                     </MenuItem>
-                                    <MenuItem value="todo">
-                                        <Typography variant="body2">To Do</Typography>
+                                    <MenuItem value="Practitioner">
+                                        <Typography variant="body2">Practitioner</Typography>
                                     </MenuItem>
-                                    <MenuItem value="consult">
-                                        <Typography variant="body2">Consult</Typography>
+                                    <MenuItem value="Dr. Smith">
+                                        <Typography variant="body2">Dr. Smith</Typography>
                                     </MenuItem>
-                                    <MenuItem value="review">
-                                        <Typography variant="body2">Review</Typography>
+                                    <MenuItem value="Nurse Johnson">
+                                        <Typography variant="body2">Nurse Johnson</Typography>
                                     </MenuItem>
                                 </Select>
                             </FormControl>
@@ -356,18 +383,46 @@ export function TaskFilters({ onCreateTodo, onViewChange, currentView }: TaskFil
                             <Typography variant="caption.medium" className={classes.filterLabel}>
                                 Assignee
                             </Typography>
-                            <div className={classes.chipContainer}>
-                                {assignees.map((assignee) => (
-                                    <Chip
-                                        key={assignee}
-                                        label={<Typography variant="caption">{assignee}</Typography>}
-                                        size="small"
-                                        onDelete={() => handleRemoveAssignee(assignee)}
-                                        deleteIcon={<CloseIcon fontSize="small" />}
-                                        className={classes.chip}
-                                    />
-                                ))}
-                            </div>
+                            <FormControl fullWidth size="small">
+                                <Select
+                                    multiple
+                                    value={assignees}
+                                    onChange={(event) => {
+                                        const value = event.target.value as string[]
+                                        setAssignees(value)
+                                        filterTasks((taskType as TaskType) || undefined, value[0], facility)
+                                    }}
+                                    displayEmpty
+                                    className={classes.select}
+                                    renderValue={(selected) => (
+                                        <div className={classes.chipContainer} style={{ border: "none", padding: 0, minHeight: "auto" }}>
+                                            {(selected as string[]).map((value) => (
+                                                <Chip
+                                                    key={value}
+                                                    label={<Typography variant="caption">{value}</Typography>}
+                                                    size="small"
+                                                    onDelete={() => handleRemoveAssignee(value)}
+                                                    deleteIcon={<CloseIcon fontSize="small" />}
+                                                    className={classes.chip}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
+                                >
+                                    <MenuItem value="Me">
+                                        <Typography variant="body2">Me</Typography>
+                                    </MenuItem>
+                                    <MenuItem value="Practitioner">
+                                        <Typography variant="body2">Practitioner</Typography>
+                                    </MenuItem>
+                                    <MenuItem value="Dr. Smith">
+                                        <Typography variant="body2">Dr. Smith</Typography>
+                                    </MenuItem>
+                                    <MenuItem value="Nurse Johnson">
+                                        <Typography variant="body2">Nurse Johnson</Typography>
+                                    </MenuItem>
+                                </Select>
+                            </FormControl>
                         </div>
 
                         <div className={classes.filterGroup}>
