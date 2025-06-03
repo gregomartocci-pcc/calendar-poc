@@ -11,13 +11,12 @@ import {
     Tabs,
     Tab,
     Typography,
-    Paper,
     Button,
     makeStyles,
     createStyles,
     type Theme,
 } from "@material-ui/core"
-import { Close as CloseIcon, Add as AddIcon } from "@material-ui/icons"
+import { Close as CloseIcon } from "@material-ui/icons"
 import { type TaskType, useTaskContext } from "../../contexts/TasksContext"
 
 // Definir interfaces para los eventos
@@ -34,27 +33,21 @@ type TaskFiltersProps = {
     currentView: string
 }
 
-// Crear estilos con makeStyles
+// Crear estilos con makeStyles - CORRIGIENDO EL LAYOUT
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
         root: {
             marginBottom: theme.spacing(3),
         },
-        tabsContainer: {
+        topRow: {
             display: "flex",
-            flexDirection: "column",
-            [theme.breakpoints.up("md")]: {
-                flexDirection: "row",
-            },
             justifyContent: "space-between",
-            alignItems: "flex-start",
-            [theme.breakpoints.up("md")]: {
-                alignItems: "center",
-            },
+            alignItems: "center",
             marginBottom: theme.spacing(2),
-            gap: theme.spacing(2),
             borderBottom: "1px solid #e0e0e0",
             paddingBottom: theme.spacing(1),
+            paddingLeft: theme.spacing(3), // 🎯 PADDING IZQUIERDO
+            paddingRight: theme.spacing(3), // 🎯 PADDING DERECHO
         },
         tabs: {
             "& .MuiTabs-indicator": {
@@ -67,57 +60,102 @@ const useStyles = makeStyles((theme: Theme) =>
             fontWeight: "bold",
             color: "inherit",
             minHeight: "36px",
-            padding: theme.spacing(0, 2),
+            padding: theme.spacing(0, 3),
+            textTransform: "uppercase",
+            fontSize: "14px",
+            letterSpacing: "0.5px",
         },
-        activeTab: {
-            color: "#0e766e",
-        },
-        viewSelector: {
+        viewButtons: {
             display: "flex",
-            gap: theme.spacing(1),
-            alignItems: "center",
+            gap: theme.spacing(0.5),
         },
         viewButton: {
             minWidth: "auto",
-            padding: theme.spacing(0.5, 1),
-            fontSize: "12px",
+            padding: theme.spacing(0.5, 2),
+            fontSize: "14px",
+            textTransform: "none",
+            borderRadius: "4px",
+            border: "1px solid #e0e0e0",
+            backgroundColor: "white",
+            color: "#666",
+            "&:hover": {
+                backgroundColor: "#f5f5f5",
+            },
         },
-        createButton: {
+        activeViewButton: {
             backgroundColor: "#0e766e",
             color: "white",
+            border: "1px solid #0e766e",
             "&:hover": {
                 backgroundColor: "#0d5d56",
             },
         },
-        filtersGrid: {
-            display: "grid",
-            gridTemplateColumns: "1fr",
-            [theme.breakpoints.up("md")]: {
-                gridTemplateColumns: "1fr 1fr 1fr",
-            },
+        // 🎯 FILA DE FILTROS CON CREATE BUTTON
+        filtersRow: {
+            display: "flex",
             gap: theme.spacing(2),
-            marginBottom: theme.spacing(2),
+            alignItems: "flex-end",
+            justifyContent: "space-between", // Para separar filtros del botón
+            paddingLeft: theme.spacing(3), // 🎯 PADDING IZQUIERDO
+            paddingRight: theme.spacing(3), // 🎯 PADDING DERECHO
+            paddingBottom: theme.spacing(2), // Un poco de espacio abajo
+        },
+        filtersSection: {
+            display: "flex",
+            gap: theme.spacing(2),
+            alignItems: "flex-end",
+            flex: 1,
+        },
+        filterGroup: {
+            minWidth: "200px",
         },
         filterLabel: {
             marginBottom: theme.spacing(0.5),
             display: "block",
             color: theme.palette.text.secondary,
+            fontSize: "12px",
+            fontWeight: "bold",
+            textTransform: "uppercase",
+            letterSpacing: "0.5px",
         },
         select: {
             backgroundColor: "white",
-            height: "36px",
+            height: "40px",
+            "& .MuiSelect-select": {
+                padding: theme.spacing(1, 1.5),
+                paddingLeft: theme.spacing(2), // 🎯 MÁS PADDING A LA IZQUIERDA
+            },
         },
         chipContainer: {
             display: "flex",
-            gap: theme.spacing(1),
+            gap: theme.spacing(0.5),
             padding: theme.spacing(1),
+            paddingLeft: theme.spacing(2), // 🎯 MÁS PADDING A LA IZQUIERDA
             backgroundColor: "white",
-            minHeight: "36px",
+            minHeight: "40px",
             alignItems: "center",
+            border: "1px solid #e0e0e0",
+            borderRadius: "4px",
         },
         chip: {
             backgroundColor: "#f3f4f6",
             color: "#374151",
+            height: "24px",
+        },
+        // 🎯 CREATE BUTTON EN LA SEGUNDA FILA
+        createButton: {
+            backgroundColor: "#0e766e",
+            color: "white",
+            padding: theme.spacing(1, 3),
+            fontSize: "14px",
+            fontWeight: "bold",
+            textTransform: "uppercase",
+            letterSpacing: "0.5px",
+            height: "40px", // Misma altura que los selects
+            flexShrink: 0, // No se encoge
+            "&:hover": {
+                backgroundColor: "#0d5d56",
+            },
         },
     }),
 )
@@ -133,7 +171,7 @@ function TabPanel(props: TabPanelProps) {
             aria-labelledby={`task-tab-${index}`}
             {...other}
         >
-            {value === index && <Box p={1}>{children}</Box>}
+            {value === index && <Box>{children}</Box>}
         </div>
     )
 }
@@ -148,7 +186,7 @@ function a11yProps(index: number) {
 export function TaskFilters({ onCreateTodo, onViewChange, currentView }: TaskFiltersProps) {
     const classes = useStyles()
     const { scheduledTasks, filterTasks } = useTaskContext()
-    const [tabValue, setTabValue] = useState<number>(1)
+    const [tabValue, setTabValue] = useState<number>(1) // PERSONAL por defecto
     const [facility, setFacility] = useState<string>("watersprings")
     const [dueDate, setDueDate] = useState<string>("all")
     const [assignees, setAssignees] = useState<string[]>(["Me", "Practitioner"])
@@ -180,149 +218,148 @@ export function TaskFilters({ onCreateTodo, onViewChange, currentView }: TaskFil
         filterTasks(value || undefined, assignees[0], facility)
     }
 
-    const handleViewChange = (view: string) => {
-        onViewChange(view)
-    }
-
     return (
         <div className={classes.root}>
-            <div className={classes.tabsContainer}>
+            {/* 🎯 PRIMERA FILA: SOLO TABS + VIEW SELECTOR */}
+            <div className={classes.topRow}>
                 <Tabs value={tabValue} onChange={handleTabChange} aria-label="task filter tabs" className={classes.tabs}>
-                    <Tab label="All Tasks" {...a11yProps(0)} className={classes.tab} />
-                    <Tab label="My Tasks" {...a11yProps(1)} className={classes.tab} />
+                    <Tab label="TEAM" {...a11yProps(0)} className={classes.tab} />
+                    <Tab label="PERSONAL" {...a11yProps(1)} className={classes.tab} />
                 </Tabs>
 
-                {/* Selector de vista y botón crear */}
-                <div className={classes.viewSelector}>
+                {/* SOLO VIEW SELECTOR BUTTONS - SIN CREATE BUTTON */}
+                <div className={classes.viewButtons}>
                     <Button
-                        variant={currentView === "list" ? "contained" : "outlined"}
-                        size="small"
-                        className={classes.viewButton}
-                        onClick={() => handleViewChange("list")}
+                        className={`${classes.viewButton} ${currentView === "list" ? classes.activeViewButton : ""}`}
+                        onClick={() => onViewChange("list")}
                     >
                         List
                     </Button>
                     <Button
-                        variant={currentView === "board" ? "contained" : "outlined"}
-                        size="small"
-                        className={classes.viewButton}
-                        onClick={() => handleViewChange("board")}
+                        className={`${classes.viewButton} ${currentView === "board" ? classes.activeViewButton : ""}`}
+                        onClick={() => onViewChange("board")}
                     >
                         Board
                     </Button>
                     <Button
-                        variant={currentView === "calendar" ? "contained" : "outlined"}
-                        size="small"
-                        className={classes.viewButton}
-                        onClick={() => handleViewChange("calendar")}
+                        className={`${classes.viewButton} ${currentView === "calendar" ? classes.activeViewButton : ""}`}
+                        onClick={() => onViewChange("calendar")}
                     >
                         Calendar
-                    </Button>
-                    <Button
-                        variant="contained"
-                        size="small"
-                        className={`${classes.viewButton} ${classes.createButton}`}
-                        startIcon={<AddIcon />}
-                        onClick={onCreateTodo}
-                    >
-                        Create TO DO
                     </Button>
                 </div>
             </div>
 
+            {/* CONTENIDO DE LOS TABS */}
             <TabPanel value={tabValue} index={0}>
-                <div className={classes.filtersGrid}>
-                    <div>
-                        <Typography variant="caption" className={classes.filterLabel}>
-                            Facilities
-                        </Typography>
-                        <FormControl fullWidth size="small">
-                            <Select value={facility} onChange={handleFacilityChange} displayEmpty className={classes.select}>
-                                <MenuItem value="watersprings">Watersprings Senior Living</MenuItem>
-                                <MenuItem value="oakview">Oakview Care Center</MenuItem>
-                                <MenuItem value="pinegrove">Pine Grove Assisted Living</MenuItem>
-                            </Select>
-                        </FormControl>
+                {/* TEAM TAB - 🎯 SEGUNDA FILA: FILTROS + CREATE BUTTON */}
+                <div className={classes.filtersRow}>
+                    <div className={classes.filtersSection}>
+                        <div className={classes.filterGroup}>
+                            <Typography variant="caption" className={classes.filterLabel}>
+                                Facilities
+                            </Typography>
+                            <FormControl fullWidth size="small">
+                                <Select value={facility} onChange={handleFacilityChange} displayEmpty className={classes.select}>
+                                    <MenuItem value="watersprings">Watersprings Senior Living</MenuItem>
+                                    <MenuItem value="oakview">Oakview Care Center</MenuItem>
+                                    <MenuItem value="pinegrove">Pine Grove Assisted Living</MenuItem>
+                                </Select>
+                            </FormControl>
+                        </div>
+
+                        <div className={classes.filterGroup}>
+                            <Typography variant="caption" className={classes.filterLabel}>
+                                Task Type
+                            </Typography>
+                            <FormControl fullWidth size="small">
+                                <Select value={taskType} onChange={handleTaskTypeChange} displayEmpty className={classes.select}>
+                                    <MenuItem value="">All Types</MenuItem>
+                                    <MenuItem value="todo">To Do</MenuItem>
+                                    <MenuItem value="consult">Consult</MenuItem>
+                                    <MenuItem value="review">Review</MenuItem>
+                                </Select>
+                            </FormControl>
+                        </div>
+
+                        <div className={classes.filterGroup}>
+                            <Typography variant="caption" className={classes.filterLabel}>
+                                Due Date
+                            </Typography>
+                            <FormControl fullWidth size="small">
+                                <Select value={dueDate} onChange={handleDueDateChange} displayEmpty className={classes.select}>
+                                    <MenuItem value="all">All</MenuItem>
+                                    <MenuItem value="today">Today</MenuItem>
+                                    <MenuItem value="tomorrow">Tomorrow</MenuItem>
+                                    <MenuItem value="this-week">This Week</MenuItem>
+                                    <MenuItem value="next-week">Next Week</MenuItem>
+                                </Select>
+                            </FormControl>
+                        </div>
                     </div>
 
-                    <div>
-                        <Typography variant="caption" className={classes.filterLabel}>
-                            Task Type
-                        </Typography>
-                        <FormControl fullWidth size="small">
-                            <Select value={taskType} onChange={handleTaskTypeChange} displayEmpty className={classes.select}>
-                                <MenuItem value="">All Types</MenuItem>
-                                <MenuItem value="todo">To Do</MenuItem>
-                                <MenuItem value="consult">Consult</MenuItem>
-                                <MenuItem value="review">Review</MenuItem>
-                            </Select>
-                        </FormControl>
-                    </div>
-
-                    <div>
-                        <Typography variant="caption" className={classes.filterLabel}>
-                            Due Date
-                        </Typography>
-                        <FormControl fullWidth size="small">
-                            <Select value={dueDate} onChange={handleDueDateChange} displayEmpty className={classes.select}>
-                                <MenuItem value="all">All</MenuItem>
-                                <MenuItem value="today">Today</MenuItem>
-                                <MenuItem value="tomorrow">Tomorrow</MenuItem>
-                                <MenuItem value="this-week">This Week</MenuItem>
-                                <MenuItem value="next-week">Next Week</MenuItem>
-                            </Select>
-                        </FormControl>
-                    </div>
+                    {/* 🎯 CREATE BUTTON EN LA SEGUNDA FILA */}
+                    <Button variant="contained" className={classes.createButton} onClick={onCreateTodo}>
+                        CREATE TO DO
+                    </Button>
                 </div>
             </TabPanel>
 
             <TabPanel value={tabValue} index={1}>
-                <div className={classes.filtersGrid}>
-                    <div>
-                        <Typography variant="caption" className={classes.filterLabel}>
-                            Facilities
-                        </Typography>
-                        <FormControl fullWidth size="small">
-                            <Select value={facility} onChange={handleFacilityChange} displayEmpty className={classes.select}>
-                                <MenuItem value="watersprings">Watersprings Senior Living</MenuItem>
-                                <MenuItem value="oakview">Oakview Care Center</MenuItem>
-                                <MenuItem value="pinegrove">Pine Grove Assisted Living</MenuItem>
-                            </Select>
-                        </FormControl>
+                {/* PERSONAL TAB - 🎯 SEGUNDA FILA: FILTROS + CREATE BUTTON */}
+                <div className={classes.filtersRow}>
+                    <div className={classes.filtersSection}>
+                        <div className={classes.filterGroup}>
+                            <Typography variant="caption" className={classes.filterLabel}>
+                                Facilities
+                            </Typography>
+                            <FormControl fullWidth size="small">
+                                <Select value={facility} onChange={handleFacilityChange} displayEmpty className={classes.select}>
+                                    <MenuItem value="watersprings">Watersprings Senior Living</MenuItem>
+                                    <MenuItem value="oakview">Oakview Care Center</MenuItem>
+                                    <MenuItem value="pinegrove">Pine Grove Assisted Living</MenuItem>
+                                </Select>
+                            </FormControl>
+                        </div>
+
+                        <div className={classes.filterGroup}>
+                            <Typography variant="caption" className={classes.filterLabel}>
+                                Assignee
+                            </Typography>
+                            <div className={classes.chipContainer}>
+                                {assignees.map((assignee) => (
+                                    <Chip
+                                        key={assignee}
+                                        label={assignee}
+                                        size="small"
+                                        onDelete={() => handleRemoveAssignee(assignee)}
+                                        deleteIcon={<CloseIcon fontSize="small" />}
+                                        className={classes.chip}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className={classes.filterGroup}>
+                            <Typography variant="caption" className={classes.filterLabel}>
+                                Due Date
+                            </Typography>
+                            <FormControl fullWidth size="small">
+                                <Select value={dueDate} onChange={handleDueDateChange} displayEmpty className={classes.select}>
+                                    <MenuItem value="all">All</MenuItem>
+                                    <MenuItem value="today">Today</MenuItem>
+                                    <MenuItem value="tomorrow">Tomorrow</MenuItem>
+                                    <MenuItem value="this-week">This Week</MenuItem>
+                                    <MenuItem value="next-week">Next Week</MenuItem>
+                                </Select>
+                            </FormControl>
+                        </div>
                     </div>
 
-                    <div>
-                        <Typography variant="caption" className={classes.filterLabel}>
-                            Assignee
-                        </Typography>
-                        <Paper variant="outlined" className={classes.chipContainer}>
-                            {assignees.map((assignee) => (
-                                <Chip
-                                    key={assignee}
-                                    label={assignee}
-                                    size="small"
-                                    onDelete={() => handleRemoveAssignee(assignee)}
-                                    deleteIcon={<CloseIcon fontSize="small" />}
-                                    className={classes.chip}
-                                />
-                            ))}
-                        </Paper>
-                    </div>
-
-                    <div>
-                        <Typography variant="caption" className={classes.filterLabel}>
-                            Due Date
-                        </Typography>
-                        <FormControl fullWidth size="small">
-                            <Select value={dueDate} onChange={handleDueDateChange} displayEmpty className={classes.select}>
-                                <MenuItem value="all">All</MenuItem>
-                                <MenuItem value="today">Today</MenuItem>
-                                <MenuItem value="tomorrow">Tomorrow</MenuItem>
-                                <MenuItem value="this-week">This Week</MenuItem>
-                                <MenuItem value="next-week">Next Week</MenuItem>
-                            </Select>
-                        </FormControl>
-                    </div>
+                    {/* 🎯 CREATE BUTTON EN LA SEGUNDA FILA */}
+                    <Button variant="contained" className={classes.createButton} onClick={onCreateTodo}>
+                        CREATE TO DO
+                    </Button>
                 </div>
             </TabPanel>
         </div>
