@@ -5,7 +5,7 @@ import { useState } from "react"
 import { TextField, FormControl, InputLabel, Select, MenuItem, Grid, Typography, Button } from "@material-ui/core"
 import { makeStyles, createStyles, type Theme } from "@material-ui/core/styles"
 import { Dialog } from "@evergreen/core"
-import { useTaskContext, type TaskType } from "../../contexts/TasksContext"
+import type { TaskType } from "../../contexts/TasksContext"
 
 interface CreateEventModalProps {
     open: boolean
@@ -13,13 +13,13 @@ interface CreateEventModalProps {
     onCreateEvent: (eventData: EventFormData) => void
 }
 
-interface EventFormData {
+export interface EventFormData {
     title: string
     type: TaskType
     patient: string
     facility: string
     assignee: string
-    date: string
+    date: string // 🎯 MANTENER COMO STRING PARA EL FORM
     startTime: string
     endTime: string
     timezone: string
@@ -65,7 +65,6 @@ const useStyles = makeStyles((theme: Theme) =>
 
 export function CreateTaskModal({ open, onClose, onCreateEvent }: CreateEventModalProps) {
     const classes = useStyles()
-    const { addTaskToUnscheduled } = useTaskContext()
 
     const [formData, setFormData] = useState<EventFormData>({
         title: "",
@@ -94,6 +93,8 @@ export function CreateTaskModal({ open, onClose, onCreateEvent }: CreateEventMod
             alert("Por favor completa todos los campos requeridos")
             return
         }
+
+        console.log("🎯 CreateTaskModal: Submitting form data:", formData)
 
         // Crear el evento
         onCreateEvent(formData)
@@ -302,5 +303,3 @@ export function CreateTaskModal({ open, onClose, onCreateEvent }: CreateEventMod
         />
     )
 }
-
-export type { EventFormData }

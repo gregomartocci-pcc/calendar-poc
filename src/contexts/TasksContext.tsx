@@ -1,7 +1,6 @@
 "use client"
 
-import type React from "react"
-import { createContext, useContext, useState } from "react"
+import { createContext, useContext, useState, type ReactNode } from "react"
 
 export type TaskType = "todo" | "consult" | "review"
 
@@ -13,191 +12,127 @@ export interface Task {
   facility?: string
   assignee?: string
   dueDate?: string
-  scheduledDate?: string
+  scheduledDate?: Date
   startTime?: string
   endTime?: string
   timezone?: string
   description?: string
-  createdAt?: string
-  updatedAt?: string
-}
-
-interface CalendarEvents {
-  [date: string]: Task[]
 }
 
 interface TaskContextType {
   unscheduledTasks: Task[]
   scheduledTasks: Task[]
-  calendarEvents: CalendarEvents
-  removeTaskFromUnscheduled: (taskId: string) => void
-  addTaskToUnscheduled: (task: Task) => void
-  addTaskToScheduled: (task: Task) => void
-  addNewEvent: (task: Task) => void
-  addEventToCalendar: (task: Task, date: string) => void
   filterTasks: (type?: TaskType, assignee?: string, facility?: string) => void
+  addNewEvent: (task: Task) => void
+  moveTaskToCalendar: (taskId: string, newDate: Date) => void
 }
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined)
 
-export function TaskProvider({ children }: { children: React.ReactNode }) {
-  const [unscheduledTasks, setUnscheduledTasks] = useState<Task[]>([
-    {
-      id: "task-1",
-      title: "Medical Review",
-      type: "review",
-      patient: "John Doe",
-      facility: "Watersprings Senior Living",
-      assignee: "Dr. Smith",
-      dueDate: "2025-05-20",
-      startTime: "14:00",
-      endTime: "15:00",
-      timezone: "America/New_York",
-      description: "Quarterly medical review for patient",
-      createdAt: "2025-01-03T10:00:00Z",
-    },
-    {
-      id: "task-2",
-      title: "Patient Consultation",
-      type: "consult",
-      patient: "Jane Smith",
-      facility: "Oakview Care Center",
-      assignee: "Dr. Johnson",
-      dueDate: "2025-05-22",
-      startTime: "09:30",
-      endTime: "10:30",
-      timezone: "America/New_York",
-      description: "Initial consultation for new patient",
-      createdAt: "2025-01-03T11:00:00Z",
-    },
-  ])
+// Sample data
+const sampleUnscheduledTasks: Task[] = [
+  {
+    id: "1",
+    title: "Review Patient Chart",
+    type: "review",
+    patient: "John Doe",
+    facility: "Watersprings Senior Living",
+    assignee: "Dr. Smith",
+    dueDate: "2024-06-15",
+  },
+  {
+    id: "2",
+    title: "Medication Consultation",
+    type: "consult",
+    patient: "Jane Smith",
+    facility: "Oakview Care Center",
+    assignee: "Nurse Johnson",
+    dueDate: "2024-06-16",
+  },
+  {
+    id: "3",
+    title: "Follow-up Call",
+    type: "todo",
+    patient: "Bob Wilson",
+    facility: "Pine Grove Assisted Living",
+    assignee: "Me",
+    dueDate: "2024-06-17",
+  },
+]
 
-  const [scheduledTasks, setScheduledTasks] = useState<Task[]>([])
+const sampleScheduledTasks: Task[] = [
+  {
+    id: "scheduled-1",
+    title: "Morning Rounds",
+    type: "todo",
+    patient: "Multiple Patients",
+    facility: "Watersprings Senior Living",
+    assignee: "Dr. Smith",
+    scheduledDate: new Date(2024, 5, 15), // June 15, 2024
+    startTime: "09:00",
+    endTime: "11:00",
+  },
+]
 
-  // 🎯 CALENDAR EVENTS WITH COMPLETE DATA IN ENGLISH
-  const [calendarEvents, setCalendarEvents] = useState<CalendarEvents>({
-    "2025-05-01": [
-      {
-        id: "mock-1",
-        title: "Team Meeting",
-        type: "todo",
-        patient: "Juan Pérez",
-        facility: "Watersprings Senior Living",
-        assignee: "Dr. García",
-        startTime: "10:00",
-        endTime: "11:00",
-        timezone: "America/New_York",
-        description: "Weekly team coordination meeting",
-        createdAt: "2025-01-01T08:00:00Z",
-      },
-      {
-        id: "mock-2",
-        title: "Medical Consultation",
-        type: "consult",
-        patient: "María López",
-        facility: "Oakview Care Center",
-        assignee: "Dr. Martínez",
-        startTime: "14:30",
-        endTime: "15:30",
-        timezone: "America/New_York",
-        description: "Follow-up consultation for chronic condition",
-        createdAt: "2025-01-01T09:00:00Z",
-      },
-    ],
-    "2025-05-05": [
-      {
-        id: "mock-3",
-        title: "File Review",
-        type: "review",
-        patient: "Carlos Ruiz",
-        facility: "Pine Grove Assisted Living",
-        assignee: "Nurse Ana",
-        startTime: "16:00",
-        endTime: "17:00",
-        timezone: "America/New_York",
-        description: "Review patient medical records and update care plan",
-        createdAt: "2025-01-02T10:00:00Z",
-      },
-    ],
-  })
+export function TaskProvider({ children }: { children: ReactNode }) {
+  const [unscheduledTasks, setUnscheduledTasks] = useState<Task[]>(sampleUnscheduledTasks)
+  const [scheduledTasks, setScheduledTasks] = useState<Task[]>(sampleScheduledTasks)
 
-  const removeTaskFromUnscheduled = (taskId: string) => {
-    console.log(`🗑️ Context: Removing task with ID: ${taskId}`)
-    console.log(
-      `🗑️ Current unscheduled tasks:`,
-      unscheduledTasks.map((t) => ({ id: t.id, title: t.title })),
-    )
-
-    setUnscheduledTasks((prev) => {
-      const filtered = prev.filter((task) => task.id !== taskId)
-      console.log(
-        `🗑️ Tasks after filtering:`,
-        filtered.map((t) => ({ id: t.id, title: t.title })),
-      )
-      return filtered
-    })
+  const filterTasks = (type?: TaskType, assignee?: string, facility?: string) => {
+    console.log("Filtering tasks:", { type, assignee, facility })
+    // Implement filtering logic here
   }
 
-  const addTaskToUnscheduled = (task: Task) => {
-    setUnscheduledTasks((prev) => [...prev, task])
-  }
-
-  const addTaskToScheduled = (task: Task) => {
-    setScheduledTasks((prev) => [...prev, task])
-  }
-
-  // 🎯 FUNCTION TO ADD EVENT TO CALENDAR
-  const addEventToCalendar = (task: Task, date: string) => {
-    console.log(`📅 Context: Adding event to calendar on ${date}:`, task)
-
-    setCalendarEvents((prev) => {
-      const updated = {
-        ...prev,
-        [date]: [...(prev[date] || []), task],
-      }
-      console.log(`✅ Context: Updated calendar events for ${date}:`, updated[date])
-      return updated
-    })
-  }
-
-  // 🎯 FUNCTION TO ADD NEW EVENTS
   const addNewEvent = (task: Task) => {
-    console.log(`📅 Context: Adding new event:`, task)
+    console.log("🎯 Context: Adding new event:", task)
 
-    // If it has a scheduled date, add it to the calendar
     if (task.scheduledDate) {
-      addEventToCalendar(task, task.scheduledDate)
+      // Si tiene fecha programada, va a scheduledTasks
       setScheduledTasks((prev) => [...prev, task])
-      console.log(`✅ Context: Event added to scheduled tasks and calendar`)
     } else {
-      // If no date, goes to unscheduled
+      // Si no tiene fecha, va a unscheduledTasks
       setUnscheduledTasks((prev) => [...prev, task])
-      console.log(`✅ Context: Event added to unscheduled tasks`)
     }
   }
 
-  const filterTasks = (type?: TaskType, assignee?: string, facility?: string) => {
-    console.log(`Filtering tasks by type: ${type}, assignee: ${assignee}, facility: ${facility}`)
-    // Here you would implement the actual filtering logic
+  // 🎯 NUEVA FUNCIÓN: Mover tarea al calendario
+  const moveTaskToCalendar = (taskId: string, newDate: Date) => {
+    console.log("🎯 Context: Moving task to calendar:", taskId, newDate)
+
+    // Buscar la tarea en unscheduledTasks
+    const unscheduledTask = unscheduledTasks.find((task) => task.id === taskId)
+
+    if (unscheduledTask) {
+      // Mover de unscheduled a scheduled
+      const updatedTask = { ...unscheduledTask, scheduledDate: newDate }
+
+      setUnscheduledTasks((prev) => prev.filter((task) => task.id !== taskId))
+      setScheduledTasks((prev) => [...prev, updatedTask])
+
+      console.log("✅ Context: Task moved from unscheduled to scheduled")
+      return
+    }
+
+    // Buscar la tarea en scheduledTasks (para mover dentro del calendario)
+    const scheduledTask = scheduledTasks.find((task) => task.id === taskId)
+
+    if (scheduledTask) {
+      // Actualizar la fecha en scheduledTasks
+      setScheduledTasks((prev) => prev.map((task) => (task.id === taskId ? { ...task, scheduledDate: newDate } : task)))
+
+      console.log("✅ Context: Task date updated in scheduled tasks")
+    }
   }
 
-  return (
-    <TaskContext.Provider
-      value={{
-        unscheduledTasks,
-        scheduledTasks,
-        calendarEvents,
-        removeTaskFromUnscheduled,
-        addTaskToUnscheduled,
-        addTaskToScheduled,
-        addNewEvent,
-        addEventToCalendar,
-        filterTasks,
-      }}
-    >
-      {children}
-    </TaskContext.Provider>
-  )
+  const value: TaskContextType = {
+    unscheduledTasks,
+    scheduledTasks,
+    filterTasks,
+    addNewEvent,
+    moveTaskToCalendar,
+  }
+
+  return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>
 }
 
 export function useTaskContext() {

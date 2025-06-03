@@ -2,379 +2,458 @@
 
 import type React from "react"
 
-import { useState, useRef } from "react"
-import { Box, Typography } from "@material-ui/core"
-import { makeStyles } from "@material-ui/core/styles"
-import { Dialog, DialogContentText, Button } from "@evergreen/core"
-import FullCalendar from "@fullcalendar/react"
-import dayGridPlugin from "@fullcalendar/daygrid"
-import interactionPlugin from "@fullcalendar/interaction"
-import { useTaskContext, type Task } from "../../contexts/TasksContext"
+import { useState } from "react"
+import { Box, Button, Paper, makeStyles, createStyles, type Theme } from "@material-ui/core"
+import { ChevronLeft, ChevronRight } from "@material-ui/icons"
+import { Typography } from "@evergreen/core"
 
-const useStyles = makeStyles(() => ({
-    root: {
-        width: "100%",
-        minHeight: "600px",
-        position: "relative",
-    },
-    calendarContainer: {
-        width: "100%",
-        height: "100%",
-        "& .fc": {
-            fontFamily: "inherit",
+interface CalendarEvent {
+    id: string
+    title: string
+    date: Date
+    time?: string
+    type?: "todo" | "consult" | "review"
+}
+
+interface CalendarViewProps {
+    events?: CalendarEvent[]
+    onEventClick?: (event: CalendarEvent) => void
+    onDateClick?: (date: Date) => void
+    onEventDrop?: (event: CalendarEvent, newDate: Date) => void
+    onTaskDrop?: (task: any, newDate: Date) => void // 🎯 NUEVA PROP
+}
+
+const useStyles = makeStyles((theme: Theme) =>
+    createStyles({
+        calendarContainer: {
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+            overflow: "hidden",
         },
-        "& .fc-event": {
+        calendarHeader: {
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: theme.spacing(2),
+            backgroundColor: "#f8f9fa",
+        },
+        navigationSection: {
+            display: "flex",
+            alignItems: "center",
+            gap: theme.spacing(1),
+        },
+        navButton: {
+            minWidth: "32px",
+            height: "32px",
+            padding: 0,
+            backgroundColor: "transparent",
+            color: "#666",
+            "&:hover": {
+                backgroundColor: "#e9ecef",
+            },
+        },
+        todayButton: {
+            backgroundColor: "transparent",
+            color: "#17a2b8",
+            textTransform: "uppercase",
+            fontSize: "12px",
+            fontWeight: "bold",
+            padding: theme.spacing(0.5, 1),
+            "&:hover": {
+                backgroundColor: "#e9ecef",
+            },
+        },
+        monthTitle: {
+            fontSize: "18px",
+            fontWeight: 500,
+            color: "#333",
+        },
+        viewToggle: {
+            display: "flex",
+            backgroundColor: "#fff",
+            borderRadius: "4px",
+            overflow: "hidden",
+            border: "1px solid #dee2e6",
+        },
+        viewButton: {
+            backgroundColor: "transparent",
+            color: "#666",
+            textTransform: "none",
+            padding: theme.spacing(0.5, 2),
+            borderRadius: 0,
+            fontSize: "14px",
+            "&:hover": {
+                backgroundColor: "#f8f9fa",
+            },
+        },
+        activeViewButton: {
+            backgroundColor: "#17a2b8",
+            color: "#fff",
+            "&:hover": {
+                backgroundColor: "#138496",
+            },
+        },
+        weekdaysHeader: {
+            display: "grid",
+            gridTemplateColumns: "repeat(7, 1fr)",
+            backgroundColor: "#f8f9fa",
+            borderBottom: "1px solid #dee2e6",
+        },
+        weekday: {
+            padding: theme.spacing(1.5),
+            textAlign: "center",
+            borderRight: "1px solid #dee2e6",
+            "&:last-child": {
+                borderRight: "none",
+            },
+        },
+        calendarGrid: {
+            display: "grid",
+            gridTemplateColumns: "repeat(7, 1fr)",
+            gridAutoRows: "minmax(120px, auto)",
+        },
+        calendarCell: {
+            position: "relative",
+            border: "1px solid #dee2e6",
+            borderTop: "none",
+            borderLeft: "none",
+            padding: theme.spacing(1),
+            height: "100%",
+            minHeight: "120px",
+            backgroundColor: "#fff",
+            "&:hover": {
+                backgroundColor: "#f8f9fa",
+            },
+            "&:first-child": {
+                borderLeft: "1px solid #dee2e6",
+            },
+        },
+        dateNumber: {
+            position: "absolute",
+            top: "8px",
+            left: "8px",
+            width: "24px",
+            height: "24px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: "50%",
+            fontSize: "14px",
+            fontWeight: 500,
+        },
+        currentDateNumber: {
+            backgroundColor: "#333",
+            color: "#fff",
+        },
+        otherMonthDate: {
+            color: "#adb5bd",
+        },
+        eventContainer: {
+            marginTop: "32px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "2px",
+        },
+        event: {
+            padding: theme.spacing(0.5, 1),
+            borderRadius: "4px",
+            fontSize: "12px",
+            cursor: "grab",
+            display: "block",
+            marginBottom: "2px",
+            "&:active": {
+                cursor: "grabbing",
+            },
+        },
+        todoEvent: {
+            backgroundColor: "#b8e6e1",
+            color: "#0e766e",
+        },
+        consultEvent: {
+            backgroundColor: "#a8d8ea",
+            color: "#0056b3",
+        },
+        reviewEvent: {
+            backgroundColor: "#ffd6a5",
+            color: "#8b4513",
+        },
+        viewMoreLink: {
+            color: "#17a2b8",
+            fontSize: "11px",
             cursor: "pointer",
+            marginTop: "4px",
+            "&:hover": {
+                textDecoration: "underline",
+            },
         },
-    },
-    eventItem: {
-        padding: "12px",
-        borderRadius: "8px",
-        border: "1px solid #e0e0e0",
-        marginBottom: "8px",
-        transition: "all 0.2s ease",
-    },
-}))
+        dragOver: {
+            backgroundColor: "#e3f2fd",
+            borderColor: "#2196f3",
+        },
+        dragging: {
+            opacity: 0.5,
+        },
+    }),
+)
 
-export default function CalendarView() {
+export function CalendarView({ events = [], onEventClick, onDateClick, onEventDrop, onTaskDrop }: CalendarViewProps) {
     const classes = useStyles()
-    const calendarRef = useRef<FullCalendar>(null)
-    const { removeTaskFromUnscheduled, calendarEvents, addEventToCalendar } = useTaskContext()
+    const [currentDate, setCurrentDate] = useState(new Date())
+    const [currentView, setCurrentView] = useState<"Month" | "Week">("Month")
+    const [draggedEvent, setDraggedEvent] = useState<CalendarEvent | null>(null)
 
-    // States for the modal
-    const [openModal, setOpenModal] = useState(false)
-    const [selectedDateEvents, setSelectedDateEvents] = useState<Task[]>([])
-    const [selectedDate, setSelectedDate] = useState<string>("")
+    // Get current month and year
+    const currentMonth = currentDate.getMonth()
+    const currentYear = currentDate.getFullYear()
 
-    // Functions to get colors based on task type
-    const getTaskBackgroundColor = (type: string): string => {
-        switch (type) {
-            case "todo":
-                return "#e6f7f5"
-            case "consult":
-                return "#e0f2fe"
-            case "review":
-                return "#fee6c9"
-            default:
-                return "#f3f4f6"
-        }
+    // Get first day of the month
+    const firstDayOfMonth = new Date(currentYear, currentMonth, 1)
+    const firstDayOfWeek = firstDayOfMonth.getDay()
+
+    // Get last day of the month
+    const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0)
+    const daysInMonth = lastDayOfMonth.getDate()
+
+    // Navigation functions
+    const goToPreviousMonth = () => {
+        setCurrentDate(new Date(currentYear, currentMonth - 1, 1))
     }
 
-    const getTaskBorderColor = (type: string): string => {
-        switch (type) {
-            case "todo":
-                return "#0e766e"
-            case "consult":
-                return "#075985"
-            case "review":
-                return "#9a3412"
-            default:
-                return "#6b7280"
-        }
+    const goToNextMonth = () => {
+        setCurrentDate(new Date(currentYear, currentMonth + 1, 1))
     }
 
-    const getTaskTextColor = (type: string): string => {
-        switch (type) {
-            case "todo":
-                return "#0e766e"
-            case "consult":
-                return "#075985"
-            case "review":
-                return "#9a3412"
-            default:
-                return "#374151"
-        }
+    const goToToday = () => {
+        setCurrentDate(new Date())
     }
 
-    // USE EVENTS FROM CONTEXT
-    const getEvents = () => {
-        console.log("🔍 Getting events from context:", calendarEvents)
-        return Object.entries(calendarEvents).flatMap(([date, tasks]) =>
-            tasks.map((task) => ({
-                id: task.id,
-                title: task.title,
-                start: task.startTime ? `${date}T${task.startTime}:00` : date,
-                end: task.endTime ? `${date}T${task.endTime}:00` : undefined,
-                backgroundColor: getTaskBackgroundColor(task.type),
-                borderColor: getTaskBorderColor(task.type),
-                textColor: getTaskTextColor(task.type),
-                extendedProps: {
-                    type: task.type,
-                    patient: task.patient,
-                    facility: task.facility,
-                    assignee: task.assignee,
-                    startTime: task.startTime,
-                    endTime: task.endTime,
-                    timezone: task.timezone,
-                    description: task.description,
-                },
-            })),
+    // Generate calendar days
+    const generateCalendarDays = () => {
+        const days = []
+
+        // Previous month days
+        const prevMonth = new Date(currentYear, currentMonth - 1, 0)
+        const prevMonthDays = prevMonth.getDate()
+
+        for (let i = prevMonthDays - firstDayOfWeek + 1; i <= prevMonthDays; i++) {
+            days.push({
+                date: new Date(currentYear, currentMonth - 1, i),
+                isCurrentMonth: false,
+            })
+        }
+
+        // Current month days
+        for (let i = 1; i <= daysInMonth; i++) {
+            days.push({
+                date: new Date(currentYear, currentMonth, i),
+                isCurrentMonth: true,
+            })
+        }
+
+        // Fill remaining cells to complete the grid (42 cells = 6 weeks)
+        const totalCells = 42
+        const remainingCells = totalCells - days.length
+
+        for (let i = 1; i <= remainingCells; i++) {
+            days.push({
+                date: new Date(currentYear, currentMonth + 1, i),
+                isCurrentMonth: false,
+            })
+        }
+
+        return days
+    }
+
+    // Check if a date is today
+    const isToday = (date: Date) => {
+        const today = new Date()
+        return (
+            date.getDate() === today.getDate() &&
+            date.getMonth() === today.getMonth() &&
+            date.getFullYear() === today.getFullYear()
         )
     }
 
-    const formatDate = (dateStr: string): string => {
-        const date = new Date(dateStr + "T00:00:00")
-        return date.toLocaleDateString("en-US", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-        })
+    // Get events for a specific date
+    const getEventsForDate = (date: Date) => {
+        return events.filter(
+            (event) =>
+                event.date.getDate() === date.getDate() &&
+                event.date.getMonth() === date.getMonth() &&
+                event.date.getFullYear() === date.getFullYear(),
+        )
     }
 
-    const formatTime = (time: string): string => {
-        if (!time) return ""
-        const [hours, minutes] = time.split(":")
-        const hour = Number.parseInt(hours)
-        const ampm = hour >= 12 ? "PM" : "AM"
-        const displayHour = hour % 12 || 12
-        return `${displayHour}:${minutes} ${ampm}`
+    // Format month name
+    const formatMonth = (date: Date) => {
+        return date.toLocaleDateString("en-US", { month: "long" })
     }
 
-    // CALLBACK FOR DATE CLICK
-    const handleDateClick = (info: any) => {
-        console.log(`🎯 Clicked on date: ${info.dateStr}`)
-        const events = calendarEvents[info.dateStr] || []
-        console.log(`📅 Found ${events.length} events for ${info.dateStr}:`, events)
-
-        setSelectedDateEvents(events)
-        setSelectedDate(info.dateStr)
-        setOpenModal(true)
+    // Drag and drop handlers
+    const handleDragStart = (e: React.DragEvent, event: CalendarEvent) => {
+        setDraggedEvent(event)
+        e.dataTransfer.effectAllowed = "move"
+        e.dataTransfer.setData("text/html", e.currentTarget.outerHTML)
+        e.currentTarget.classList.add(classes.dragging)
     }
 
-    // HANDLE NATIVE DROP
-    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault()
-
-        try {
-            const taskData = e.dataTransfer.getData("application/json")
-            if (!taskData) return
-
-            const task = JSON.parse(taskData)
-            console.log("🔍 Task data received:", task)
-
-            // Get the date of the day where it was dropped
-            const element = document.elementFromPoint(e.clientX, e.clientY)
-            if (!element) return
-
-            const dateCell = element.closest(".fc-daygrid-day")
-            if (!dateCell) return
-
-            const date = dateCell.getAttribute("data-date")
-            if (!date) return
-
-            console.log(`📦 Dropping task "${task.title}" on ${date}`)
-
-            // Check if this event already exists on this date
-            const existingEvents = calendarEvents[date] || []
-            const isDuplicate = existingEvents.some((event) => event.id === task.id)
-
-            if (!isDuplicate) {
-                // 🎯 USE CONTEXT FUNCTION
-                addEventToCalendar(task, date)
-
-                // 🎯 REMOVE TASK FROM SIDEBAR
-                if (removeTaskFromUnscheduled && task.id) {
-                    console.log(`🗑️ Attempting to remove task with ID: ${task.id}`)
-                    removeTaskFromUnscheduled(task.id)
-                    console.log(`🗑️ Remove function called for task ${task.id}`)
-                }
-                console.log(`✅ Event added successfully`)
-            } else {
-                console.log(`⚠️ Event already exists, won't duplicate`)
-            }
-        } catch (error) {
-            console.error("Error handling drop:", error)
-        }
+    const handleDragEnd = (e: React.DragEvent) => {
+        e.currentTarget.classList.remove(classes.dragging)
+        setDraggedEvent(null)
     }
 
-    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault()
         e.dataTransfer.dropEffect = "move"
     }
 
-    const handleMoreLinkClick = (info: any) => {
-        const dateStr = info.date.toISOString().split("T")[0]
-        const events = calendarEvents[dateStr] || []
-        setSelectedDateEvents(events)
-        setSelectedDate(dateStr)
-        setOpenModal(true)
-        return "popover"
+    const handleDragEnter = (e: React.DragEvent) => {
+        e.preventDefault()
+        e.currentTarget.classList.add(classes.dragOver)
     }
 
-    // Modal content
-    const content = (
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px", maxHeight: "400px", overflowY: "auto" }}>
-            {selectedDateEvents.length > 0 ? (
-                selectedDateEvents.map((event, index) => (
-                    <div
-                        key={`${event.id}-${index}`}
-                        className={classes.eventItem}
-                        style={{
-                            backgroundColor: getTaskBackgroundColor(event.type),
-                            borderColor: getTaskBorderColor(event.type),
-                            color: getTaskTextColor(event.type),
-                        }}
-                    >
-                        <Typography variant="body1" style={{ fontWeight: "bold", marginBottom: "8px", fontSize: "16px" }}>
-                            {event.title}
-                        </Typography>
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.currentTarget.classList.remove(classes.dragOver)
+    }
 
-                        <Typography
-                            variant="caption"
-                            style={{
-                                fontSize: "12px",
-                                opacity: 0.8,
-                                textTransform: "uppercase",
-                                marginBottom: "8px",
-                                display: "block",
-                            }}
-                        >
-                            Type: {event.type}
-                        </Typography>
+    const handleDrop = (e: React.DragEvent, targetDate: Date) => {
+        e.preventDefault()
+        e.currentTarget.classList.remove(classes.dragOver)
 
-                        {event.patient && (
-                            <Typography variant="caption" style={{ fontSize: "12px", marginBottom: "4px", display: "block" }}>
-                                👤 <strong>Patient:</strong> {event.patient}
-                            </Typography>
-                        )}
+        // Intentar obtener datos del evento arrastrado
+        try {
+            const draggedData = e.dataTransfer.getData("application/json")
+            if (draggedData) {
+                const task = JSON.parse(draggedData)
+                console.log("🎯 CalendarView: Task dropped from sidebar:", task)
 
-                        {event.facility && (
-                            <Typography variant="caption" style={{ fontSize: "12px", marginBottom: "4px", display: "block" }}>
-                                🏥 <strong>Facility:</strong> {event.facility}
-                            </Typography>
-                        )}
+                if (onTaskDrop) {
+                    onTaskDrop(task, targetDate)
+                }
+                return
+            }
+        } catch (error) {
+            console.log("No JSON data found, checking for internal event")
+        }
 
-                        {event.assignee && (
-                            <Typography variant="caption" style={{ fontSize: "12px", marginBottom: "4px", display: "block" }}>
-                                👨‍⚕️ <strong>Assignee:</strong> {event.assignee}
-                            </Typography>
-                        )}
+        // Si no hay datos JSON, es un evento interno del calendario
+        if (draggedEvent && onEventDrop) {
+            onEventDrop(draggedEvent, targetDate)
+        }
+    }
 
-                        {event.startTime && event.endTime && (
-                            <Typography variant="caption" style={{ fontSize: "12px", marginBottom: "4px", display: "block" }}>
-                                🕐 <strong>Time:</strong> {formatTime(event.startTime)} - {formatTime(event.endTime)}
-                            </Typography>
-                        )}
+    // Weekday names
+    const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
-                        {event.timezone && (
-                            <Typography variant="caption" style={{ fontSize: "12px", marginBottom: "4px", display: "block" }}>
-                                🌍 <strong>Timezone:</strong> {event.timezone}
-                            </Typography>
-                        )}
-
-                        {event.dueDate && (
-                            <Typography variant="caption" style={{ fontSize: "12px", marginBottom: "4px", display: "block" }}>
-                                📅 <strong>Due Date:</strong> {event.dueDate}
-                            </Typography>
-                        )}
-
-                        {event.description && (
-                            <Typography
-                                variant="caption"
-                                style={{ fontSize: "12px", marginBottom: "4px", display: "block", fontStyle: "italic" }}
-                            >
-                                📝 <strong>Description:</strong> {event.description}
-                            </Typography>
-                        )}
-
-                        {event.createdAt && (
-                            <Typography
-                                variant="caption"
-                                style={{ fontSize: "11px", opacity: 0.7, display: "block", marginTop: "8px" }}
-                            >
-                                📋 <strong>Created:</strong>{" "}
-                                {new Date(event.createdAt).toLocaleDateString("en-US", {
-                                    year: "numeric",
-                                    month: "short",
-                                    day: "numeric",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                })}
-                            </Typography>
-                        )}
-
-                        <Typography
-                            variant="caption"
-                            style={{ fontSize: "11px", opacity: 0.7, display: "block", marginTop: "4px" }}
-                        >
-                            🆔 <strong>ID:</strong> {event.id}
-                        </Typography>
-                    </div>
-                ))
-            ) : (
-                <DialogContentText>No events scheduled for {formatDate(selectedDate)}</DialogContentText>
-            )}
-        </div>
-    )
-
-    // Modal actions
-    const actions = (
-        <Button color="primary" label="Close" onClick={() => setOpenModal(false)} size="small" variant="contained" />
-    )
-
-    // Modal header
-    const title = (
-        <Typography variant="h4" style={{ color: "#333", fontWeight: "bold" }}>
-            Events for {formatDate(selectedDate)}
-            {selectedDateEvents.length > 0 && (
-                <span
-                    style={{
-                        backgroundColor: "#007bff",
-                        color: "white",
-                        borderRadius: "50%",
-                        width: "24px",
-                        height: "24px",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "12px",
-                        marginLeft: "8px",
-                    }}
-                >
-                    {selectedDateEvents.length}
-                </span>
-            )}
-        </Typography>
-    )
+    // Calendar days
+    const calendarDays = generateCalendarDays()
 
     return (
-        <Box className={classes.root}>
-            <div className={classes.calendarContainer} onDrop={handleDrop} onDragOver={handleDragOver}>
-                {/* 🎯 FULLCALENDAR REACT COMPONENT */}
-                <FullCalendar
-                    ref={calendarRef}
-                    plugins={[dayGridPlugin, interactionPlugin]}
-                    initialView="dayGridMonth"
-                    headerToolbar={{
-                        left: "prev,next today",
-                        center: "title",
-                        right: "dayGridMonth,dayGridWeek",
-                    }}
-                    events={getEvents()}
-                    editable={true}
-                    height="auto"
-                    fixedWeekCount={false}
-                    dayMaxEvents={3}
-                    eventTimeFormat={{
-                        hour: "numeric",
-                        minute: "2-digit",
-                        meridiem: "short",
-                    }}
-                    dateClick={handleDateClick}
-                    moreLinkClick={handleMoreLinkClick}
-                />
-            </div>
+        <Paper className={classes.calendarContainer}>
+            {/* Calendar Header */}
+            <Box className={classes.calendarHeader}>
+                <Box className={classes.navigationSection}>
+                    <Button className={classes.navButton} onClick={goToPreviousMonth}>
+                        <ChevronLeft fontSize="small" />
+                    </Button>
+                    <Button className={classes.navButton} onClick={goToNextMonth}>
+                        <ChevronRight fontSize="small" />
+                    </Button>
+                    <Button className={classes.todayButton} onClick={goToToday}>
+                        <Typography variant="caption" style={{ textTransform: "uppercase", fontWeight: "bold" }}>
+                            TODAY
+                        </Typography>
+                    </Button>
+                </Box>
 
-            <Dialog
-                actions={actions}
-                content={content}
-                data-testid="events-dialog"
-                open={openModal}
-                title={title}
-                contentPadding="16px"
-                contentDividers
-            />
-        </Box>
+                <Typography variant="h3" className={classes.monthTitle}>
+                    {formatMonth(currentDate)}
+                </Typography>
+
+                <Box className={classes.viewToggle}>
+                    <Button
+                        className={`${classes.viewButton} ${currentView === "Month" ? classes.activeViewButton : ""}`}
+                        onClick={() => setCurrentView("Month")}
+                    >
+                        <Typography variant="body2">Month</Typography>
+                    </Button>
+                    <Button
+                        className={`${classes.viewButton} ${currentView === "Week" ? classes.activeViewButton : ""}`}
+                        onClick={() => setCurrentView("Week")}
+                    >
+                        <Typography variant="body2">Week</Typography>
+                    </Button>
+                </Box>
+            </Box>
+
+            {/* Weekday Headers */}
+            <Box className={classes.weekdaysHeader}>
+                {weekdays.map((day) => (
+                    <Box key={day} className={classes.weekday}>
+                        <Typography variant="body2" style={{ fontWeight: 500, color: "#666" }}>
+                            {day}
+                        </Typography>
+                    </Box>
+                ))}
+            </Box>
+
+            {/* Calendar Grid */}
+            <Box className={classes.calendarGrid}>
+                {calendarDays.map((day, index) => {
+                    const dayEvents = getEventsForDate(day.date)
+                    const isCurrentDay = isToday(day.date)
+                    const visibleEvents = dayEvents.slice(0, 3) // Show max 3 events
+                    const hasMoreEvents = dayEvents.length > 3
+
+                    return (
+                        <Box
+                            key={index}
+                            className={classes.calendarCell}
+                            onClick={() => onDateClick && onDateClick(day.date)}
+                            onDragOver={handleDragOver}
+                            onDragEnter={handleDragEnter}
+                            onDragLeave={handleDragLeave}
+                            onDrop={(e) => handleDrop(e, day.date)}
+                        >
+                            <Box
+                                className={`${classes.dateNumber} ${isCurrentDay ? classes.currentDateNumber : ""} ${!day.isCurrentMonth ? classes.otherMonthDate : ""
+                                    }`}
+                            >
+                                <Typography variant="body2">{day.date.getDate()}</Typography>
+                            </Box>
+
+                            <Box className={classes.eventContainer}>
+                                {visibleEvents.map((event) => (
+                                    <Box
+                                        key={event.id}
+                                        className={`${classes.event} ${event.type === "todo"
+                                            ? classes.todoEvent
+                                            : event.type === "consult"
+                                                ? classes.consultEvent
+                                                : classes.reviewEvent
+                                            }`}
+                                        draggable
+                                        onDragStart={(e) => handleDragStart(e, event)}
+                                        onDragEnd={handleDragEnd}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            onEventClick && onEventClick(event)
+                                        }}
+                                    >
+                                        <Typography variant="caption">{event.title}</Typography>
+                                    </Box>
+                                ))}
+                                {hasMoreEvents && (
+                                    <Typography variant="caption" className={classes.viewMoreLink}>
+                                        view more
+                                    </Typography>
+                                )}
+                            </Box>
+                        </Box>
+                    )
+                })}
+            </Box>
+        </Paper>
     )
 }

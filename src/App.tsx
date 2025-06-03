@@ -8,13 +8,11 @@ import { Header } from "./components/Header/Header"
 
 import { TaskProvider, useTaskContext } from "./contexts/TasksContext"
 
-
-import CalendarView from "./components/CalendarView/CalendarView"
 import { MUIKanbanBoard } from "./components/KanbanBoard/KanbanBoard"
 import { TaskFilters } from "./components/TasksFilters/TasksFilters"
-import { CreateTaskModal, EventFormData } from "./components/CreateTaskModal/CreateTaskModal"
+import { CreateTaskModal, type EventFormData } from "./components/CreateTaskModal/CreateTaskModal"
 import { Sidebar } from "./Siderbar/Sidebar"
-
+import { CalendarView } from "./components/CalendarView/CalendarView"
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -50,7 +48,7 @@ function AppContent() {
   const classes = useStyles()
   const [currentView, setCurrentView] = useState("calendar") // 🎯 CAMBIAR A CALENDAR PARA PROBAR
   const [createModalOpen, setCreateModalOpen] = useState(false)
-  const { addNewEvent } = useTaskContext()
+  const { addNewEvent, scheduledTasks, moveTaskToCalendar } = useTaskContext()
 
   const handleViewChange = (view: string) => {
     console.log("Changing view to:", view)
@@ -77,7 +75,10 @@ function AppContent() {
       patient: eventData.patient,
       facility: eventData.facility,
       assignee: eventData.assignee,
-      scheduledDate: eventData.date, // 🎯 IMPORTANTE: FECHA PROGRAMADA
+      scheduledDate: (() => {
+        const [year, month, day] = eventData.date.split("-").map(Number)
+        return new Date(year, month - 1, day) // month - 1 porque los meses en JS van de 0-11
+      })(), // 🎯 CONVERTIR STRING A DATE EN ZONA HORARIA LOCAL
       startTime: eventData.startTime,
       endTime: eventData.endTime,
       timezone: eventData.timezone,
@@ -93,12 +94,46 @@ function AppContent() {
     alert(`Event "${eventData.title}" created successfully!`)
   }
 
+  // 🎯 NUEVA FUNCIÓN: Manejar cuando se arrastra una tarea al calendario
+  const handleTaskDropOnCalendar = (task: any, newDate: Date) => {
+    console.log("🎯 App: Task dropped on calendar:", task, "to date:", newDate)
+
+    // Usar la función del contexto para mover la tarea
+    if (moveTaskToCalendar) {
+      moveTaskToCalendar(task.id, newDate)
+      console.log(`✅ App: Task "${task.title}" moved to ${newDate.toDateString()}`)
+    }
+  }
+
+  // 🎯 NUEVA FUNCIÓN: Manejar cuando se mueve una tarea ya programada en el calendario
+  const handleEventMoveInCalendar = (event: any, newDate: Date) => {
+    console.log("🎯 App: Event moved in calendar:", event, "to date:", newDate)
+
+    // Actualizar la fecha del evento programado
+    if (moveTaskToCalendar) {
+      moveTaskToCalendar(event.id, newDate)
+      console.log(`✅ App: Event "${event.title}" moved to ${newDate.toDateString()}`)
+    }
+  }
+
   const renderView = () => {
     switch (currentView) {
       case "board":
         return <MUIKanbanBoard />
       case "calendar":
-        return <CalendarView />
+        return (
+          <CalendarView
+            events={scheduledTasks.map((task) => ({
+              id: task.id,
+              title: task.title,
+              date: task.scheduledDate || new Date(),
+              time: task.startTime,
+              type: task.type,
+            }))}
+            onEventDrop={handleEventMoveInCalendar}
+            onTaskDrop={handleTaskDropOnCalendar}
+          />
+        )
       case "list":
         return (
           <Box style={{ padding: "20px", textAlign: "center" }}>
