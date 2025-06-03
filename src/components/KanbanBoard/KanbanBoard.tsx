@@ -1,150 +1,105 @@
 "use client"
 
 import { useState } from "react"
-import {
-    Box,
-    Paper,
-    Typography,
-    Avatar,
-    Chip,
-    IconButton,
-    makeStyles,
-    createStyles,
-    type Theme,
-} from "@material-ui/core"
-import { Add as AddIcon, MoreVert as MoreVertIcon } from "@material-ui/icons"
+import { Box, Paper, Avatar, makeStyles, createStyles, type Theme } from "@material-ui/core"
+import { Typography } from "@evergreen/core"
 import { DragDropContext, Droppable, Draggable, type DropResult } from "react-beautiful-dnd"
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
         kanbanContainer: {
             display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
-            gap: theme.spacing(2),
+            gridTemplateColumns: "repeat(4, 320px)", // 🎯 MISMO ANCHO QUE EL SIDEBAR (320px)
+            gap: theme.spacing(3),
             padding: theme.spacing(2),
-            backgroundColor: "#f9fafb",
+            backgroundColor: "#ffffff",
             minHeight: "70vh",
+            overflowX: "auto", // 🎯 SCROLL HORIZONTAL SI ES NECESARIO
+            justifyContent: "start", // 🎯 ALINEAR A LA IZQUIERDA
         },
         column: {
-            backgroundColor: "#f9fafb",
+            backgroundColor: "#f8f9fa",
             borderRadius: "8px",
-            padding: theme.spacing(1),
+            padding: theme.spacing(2),
             minHeight: "500px",
+            border: "1px solid #e9ecef",
+            width: "320px", // 🎯 ANCHO FIJO IGUAL AL SIDEBAR
+            flexShrink: 0, // 🎯 NO SE ENCOGE
         },
         columnHeader: {
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
             marginBottom: theme.spacing(2),
             padding: theme.spacing(0, 1),
         },
         columnTitle: {
             fontWeight: 600,
-            fontSize: "14px",
+            fontSize: "16px",
             color: "#374151",
-        },
-        taskCount: {
-            backgroundColor: "#e5e7eb",
-            color: "#6b7280",
-            fontSize: "12px",
-            fontWeight: 600,
-            padding: "2px 8px",
-            borderRadius: "12px",
-            minWidth: "20px",
-            textAlign: "center",
         },
         taskCard: {
             backgroundColor: "white",
-            border: "1px solid #e5e7eb",
             borderRadius: "8px",
             padding: theme.spacing(2),
-            marginBottom: theme.spacing(1.5),
+            marginBottom: theme.spacing(2),
             cursor: "pointer",
             transition: "all 0.2s ease",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+            border: "1px solid #e9ecef",
             "&:hover": {
-                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
                 transform: "translateY(-1px)",
             },
         },
-        taskHeader: {
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            marginBottom: theme.spacing(1),
-        },
         taskTitle: {
-            fontSize: "14px",
+            fontSize: "16px",
             fontWeight: 600,
             color: "#111827",
-            lineHeight: 1.4,
-            marginBottom: theme.spacing(0.5),
+            marginBottom: theme.spacing(2),
         },
-        taskSubtitle: {
-            fontSize: "12px",
-            color: "#6b7280",
-            marginBottom: theme.spacing(1.5),
-        },
-        taskFooter: {
+        taskDetail: {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
+            marginBottom: theme.spacing(1),
+            "&:last-child": {
+                marginBottom: 0,
+            },
         },
-        taskDate: {
-            fontSize: "12px",
+        detailLabel: {
+            fontSize: "14px",
             color: "#6b7280",
+            fontWeight: 500,
+        },
+        detailValue: {
+            fontSize: "14px",
+            color: "#111827",
+            fontWeight: 500,
+        },
+        assigneeSection: {
+            display: "flex",
+            alignItems: "center",
+            gap: theme.spacing(1),
+            marginTop: theme.spacing(2),
+            paddingTop: theme.spacing(2),
+            borderTop: "1px solid #f3f4f6",
         },
         avatar: {
             width: 24,
             height: 24,
-            fontSize: "10px",
-            backgroundColor: "#0e766e",
+            fontSize: "12px",
+            backgroundColor: "#e5e7eb",
+            color: "#374151",
         },
-        priorityChip: {
-            height: "20px",
-            fontSize: "10px",
-            fontWeight: 600,
-        },
-        highPriority: {
-            backgroundColor: "#fef2f2",
-            color: "#dc2626",
-        },
-        mediumPriority: {
-            backgroundColor: "#fffbeb",
-            color: "#d97706",
-        },
-        lowPriority: {
-            backgroundColor: "#f0fdf4",
-            color: "#16a34a",
-        },
-        addTaskButton: {
-            width: "100%",
-            padding: theme.spacing(2),
-            border: "2px dashed #d1d5db",
-            borderRadius: "8px",
-            backgroundColor: "transparent",
-            color: "#6b7280",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: theme.spacing(1),
+        assigneeName: {
             fontSize: "14px",
+            color: "#111827",
             fontWeight: 500,
-            transition: "all 0.2s ease",
-            "&:hover": {
-                borderColor: "#0e766e",
-                color: "#0e766e",
-                backgroundColor: "#f0fdfa",
-            },
         },
         dropZone: {
-            minHeight: "100px",
-            border: "2px dashed transparent",
+            minHeight: "400px",
             borderRadius: "8px",
             transition: "all 0.2s ease",
         },
         dropZoneActive: {
-            borderColor: "#0e766e",
             backgroundColor: "#f0fdfa",
         },
     }),
@@ -153,10 +108,11 @@ const useStyles = makeStyles((theme: Theme) =>
 interface Task {
     id: string
     title: string
-    subtitle: string
-    date: string
+    scheduleDate: string
+    dueDate: string
+    facility: string
     assignee: string
-    priority: "high" | "medium" | "low"
+    assigneeName: string
     column: string
 }
 
@@ -164,46 +120,40 @@ const initialTasks: Task[] = [
     {
         id: "1",
         title: "PHQ2-9 Screening",
-        subtitle: "Resident: Johnson, Mary",
-        date: "Apr 1",
-        assignee: "JD",
-        priority: "high",
-        column: "today",
+        scheduleDate: "--",
+        dueDate: "04/07/2025",
+        facility: "Watersprings Senior Living",
+        assignee: "Nurse",
+        assigneeName: "Emily Young",
+        column: "notscheduled",
     },
     {
         id: "2",
-        title: "Medication Review",
-        subtitle: "Resident: Smith, John",
-        date: "Apr 2",
-        assignee: "AS",
-        priority: "medium",
-        column: "next7days",
+        title: "Fall Risk Assessment",
+        scheduleDate: "04/01/2025",
+        dueDate: "04/02/2025",
+        facility: "Watersprings Senior Living",
+        assignee: "Nurse",
+        assigneeName: "Emily Young",
+        column: "today",
     },
     {
         id: "3",
-        title: "Care Plan Update",
-        subtitle: "Resident: Brown, Lisa",
-        date: "Apr 3",
-        assignee: "MR",
-        priority: "low",
+        title: "BIMS",
+        scheduleDate: "04/07/2025",
+        dueDate: "04/07/2025",
+        facility: "Watersprings Senior Living",
+        assignee: "Amanda Johnson",
+        assigneeName: "Emily Young",
         column: "next7days",
-    },
-    {
-        id: "4",
-        title: "Family Conference",
-        subtitle: "Resident: Davis, Robert",
-        date: "Apr 15",
-        assignee: "JD",
-        priority: "medium",
-        column: "scheduled",
     },
 ]
 
 const columns = [
-    { id: "today", title: "Today", color: "#0e766e" },
-    { id: "next7days", title: "Next 7 Days", color: "#0e766e" },
-    { id: "scheduled", title: "Scheduled", color: "#0e766e" },
-    { id: "completed", title: "Completed", color: "#16a34a" },
+    { id: "notscheduled", title: "Not Scheduled" },
+    { id: "today", title: "Today (April 1)" },
+    { id: "tomorrow", title: "Tomorrow (April 2)" },
+    { id: "next7days", title: "Next 7 Days" },
 ]
 
 export function MUIKanbanBoard() {
@@ -219,9 +169,10 @@ export function MUIKanbanBoard() {
         }
 
         const newTasks = Array.from(tasks)
-        const [reorderedTask] = newTasks.splice(source.index, 1)
-        reorderedTask.column = destination.droppableId
-        newTasks.splice(destination.index, 0, reorderedTask)
+        const taskIndex = newTasks.findIndex((task) => task.id === result.draggableId)
+        if (taskIndex !== -1) {
+            newTasks[taskIndex].column = destination.droppableId
+        }
 
         setTasks(newTasks)
     }
@@ -230,17 +181,12 @@ export function MUIKanbanBoard() {
         return tasks.filter((task) => task.column === columnId)
     }
 
-    const getPriorityClass = (priority: string) => {
-        switch (priority) {
-            case "high":
-                return classes.highPriority
-            case "medium":
-                return classes.mediumPriority
-            case "low":
-                return classes.lowPriority
-            default:
-                return classes.lowPriority
-        }
+    const getInitials = (name: string) => {
+        return name
+            .split(" ")
+            .map((n) => n[0])
+            .join("")
+            .toUpperCase()
     }
 
     return (
@@ -251,8 +197,9 @@ export function MUIKanbanBoard() {
                     return (
                         <div key={column.id} className={classes.column}>
                             <div className={classes.columnHeader}>
-                                <Typography className={classes.columnTitle}>{column.title}</Typography>
-                                <span className={classes.taskCount}>{columnTasks.length}</span>
+                                <Typography variant="h4" className={classes.columnTitle}>
+                                    {column.title}
+                                </Typography>
                             </div>
 
                             <Droppable droppableId={column.id}>
@@ -276,34 +223,57 @@ export function MUIKanbanBoard() {
                                                             transform: snapshot.isDragging ? provided.draggableProps.style?.transform : "none",
                                                         }}
                                                     >
-                                                        <div className={classes.taskHeader}>
-                                                            <Chip
-                                                                label={task.priority.toUpperCase()}
-                                                                size="small"
-                                                                className={`${classes.priorityChip} ${getPriorityClass(task.priority)}`}
-                                                            />
-                                                            <IconButton size="small">
-                                                                <MoreVertIcon fontSize="small" />
-                                                            </IconButton>
-                                                        </div>
+                                                        <Typography variant="subtitle1" className={classes.taskTitle}>
+                                                            {task.title}
+                                                        </Typography>
 
-                                                        <Typography className={classes.taskTitle}>{task.title}</Typography>
-                                                        <Typography className={classes.taskSubtitle}>{task.subtitle}</Typography>
+                                                        <Box className={classes.taskDetail}>
+                                                            <Typography variant="body2" className={classes.detailLabel}>
+                                                                Schedule Date
+                                                            </Typography>
+                                                            <Typography variant="body2" className={classes.detailValue}>
+                                                                {task.scheduleDate}
+                                                            </Typography>
+                                                        </Box>
 
-                                                        <div className={classes.taskFooter}>
-                                                            <Typography className={classes.taskDate}>{task.date}</Typography>
-                                                            <Avatar className={classes.avatar}>{task.assignee}</Avatar>
-                                                        </div>
+                                                        <Box className={classes.taskDetail}>
+                                                            <Typography variant="body2" className={classes.detailLabel}>
+                                                                Due Date
+                                                            </Typography>
+                                                            <Typography variant="body2" className={classes.detailValue}>
+                                                                {task.dueDate}
+                                                            </Typography>
+                                                        </Box>
+
+                                                        <Box className={classes.taskDetail}>
+                                                            <Typography variant="body2" className={classes.detailLabel}>
+                                                                Facility
+                                                            </Typography>
+                                                            <Typography variant="body2" className={classes.detailValue}>
+                                                                {task.facility}
+                                                            </Typography>
+                                                        </Box>
+
+                                                        <Box className={classes.taskDetail}>
+                                                            <Typography variant="body2" className={classes.detailLabel}>
+                                                                Assignee
+                                                            </Typography>
+                                                            <Typography variant="body2" className={classes.detailValue}>
+                                                                {task.assignee}
+                                                            </Typography>
+                                                        </Box>
+
+                                                        <Box className={classes.assigneeSection}>
+                                                            <Avatar className={classes.avatar}>{getInitials(task.assigneeName)}</Avatar>
+                                                            <Typography variant="body2" className={classes.assigneeName}>
+                                                                {task.assigneeName}
+                                                            </Typography>
+                                                        </Box>
                                                     </Paper>
                                                 )}
                                             </Draggable>
                                         ))}
                                         {provided.placeholder}
-
-                                        <div className={classes.addTaskButton} onClick={() => console.log(`Add task to ${column.title}`)}>
-                                            <AddIcon fontSize="small" />
-                                            Add Task
-                                        </div>
                                     </div>
                                 )}
                             </Droppable>
