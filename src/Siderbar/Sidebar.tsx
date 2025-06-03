@@ -1,12 +1,9 @@
 "use client"
-import { useRef, useEffect } from "react"
+import type React from "react"
+import { useRef } from "react"
 import { Box, Typography, Paper, Avatar } from "@material-ui/core"
 import { makeStyles, type Theme, createStyles } from "@material-ui/core/styles"
 import { useTaskContext } from "../contexts/TasksContext"
-
-interface TaskRefs {
-    [key: string]: HTMLDivElement | null
-}
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -98,68 +95,28 @@ const useStyles = makeStyles((theme: Theme) =>
 export function Sidebar() {
     const classes = useStyles()
     const { unscheduledTasks } = useTaskContext()
-    const taskRefs = useRef<TaskRefs>({})
-    const draggableInstancesRef = useRef<any[]>([])
+    const containerRef = useRef<HTMLDivElement>(null)
 
-    // Configurar los elementos arrastrables para FullCalendar SOLAMENTE
-    useEffect(() => {
-        const cleanupDraggables = () => {
-            draggableInstancesRef.current.forEach((instance) => {
-                if (instance && instance.destroy) {
-                    instance.destroy()
-                }
-            })
-            draggableInstancesRef.current = []
-        }
+    // 🎯 DRAG & DROP NATIVO PURO
+    const handleDragStart = (e: React.DragEvent<HTMLDivElement>, task: any) => {
+        console.log("🚀 Drag started for task:", task.title)
 
-        const setupDraggables = () => {
-            console.log("Setting up draggables, FullCalendar available:", !!window.FullCalendar)
+        // Configurar los datos que se van a transferir
+        e.dataTransfer.setData("application/json", JSON.stringify(task))
+        e.dataTransfer.effectAllowed = "move"
 
-            if (window.FullCalendar && window.FullCalendar.Draggable) {
-                cleanupDraggables()
+        // Agregar clase visual de arrastre
+        const target = e.currentTarget
+        setTimeout(() => {
+            target.classList.add(classes.dragging)
+        }, 0)
+    }
 
-                try {
-                    // @ts-ignore
-                    const Draggable = window.FullCalendar.Draggable
-                    const containerEl = document.getElementById("draggable-container")
-
-                    if (containerEl) {
-                        console.log("Creating draggable for container:", containerEl)
-                        const draggable = new Draggable(containerEl, {
-                            itemSelector: ".task-card",
-                            eventData: (eventEl: HTMLElement) => {
-                                const taskId = eventEl.getAttribute("data-task-id")
-                                const task = unscheduledTasks.find((t) => t.id === taskId)
-
-                                if (!task) return null
-
-                                return {
-                                    title: task.title,
-                                    id: task.id,
-                                    backgroundColor: getTaskBackgroundColor(task.type),
-                                    borderColor: getTaskTextColor(task.type),
-                                    textColor: getTaskTextColor(task.type),
-                                }
-                            },
-                        })
-
-                        draggableInstancesRef.current.push(draggable)
-                        console.log("Draggable created successfully")
-                    } else {
-                        console.error("Container element not found")
-                    }
-                } catch (error) {
-                    console.error("Error creating draggable:", error)
-                }
-            } else {
-                console.log("FullCalendar not available yet, retrying...")
-                setTimeout(setupDraggables, 1000)
-            }
-        }
-
-        setTimeout(setupDraggables, 500)
-        return cleanupDraggables
-    }, [unscheduledTasks])
+    const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
+        console.log("🏁 Drag ended")
+        // Remover clase visual de arrastre
+        e.currentTarget.classList.remove(classes.dragging)
+    }
 
     const getTaskBackgroundColor = (type: string): string => {
         switch (type) {
@@ -191,14 +148,19 @@ export function Sidebar() {
         <Box className={classes.root}>
             <Typography className={classes.title}>Not Scheduled</Typography>
 
-            <div id="draggable-container">
+            <div ref={containerRef}>
                 {unscheduledTasks.map((task) => (
                     <Paper
                         key={task.id}
-                        ref={(el: HTMLDivElement | null) => (taskRefs.current[task.id] = el)}
-                        className={`${classes.taskCard} task-card`}
-                        data-task-id={task.id}
+                        className={classes.taskCard}
                         elevation={0}
+                        style={{
+                            backgroundColor: getTaskBackgroundColor(task.type),
+                            borderColor: getTaskTextColor(task.type),
+                        }}
+                        draggable={true}
+                        onDragStart={(e) => handleDragStart(e, task)}
+                        onDragEnd={handleDragEnd}
                     >
                         <Typography className={classes.taskTitle}>{task.title}</Typography>
 
@@ -221,7 +183,6 @@ export function Sidebar() {
                             <Typography className={classes.detailLabel}>Assignee</Typography>
                             <Typography className={classes.detailValue}>{task.assignee || "--"}</Typography>
                         </Box>
-
 
                         <Box className={classes.taskDetail}>
                             <Typography className={classes.detailLabel}>Patient</Typography>
