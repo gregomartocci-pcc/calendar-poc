@@ -10,12 +10,12 @@ import {
     Select,
     Tabs,
     Tab,
-    Typography,
     Button,
     makeStyles,
     createStyles,
     type Theme,
 } from "@material-ui/core"
+import { Typography } from "@evergreen/core"
 import { Close as CloseIcon } from "@material-ui/icons"
 import { type TaskType, useTaskContext } from "../../contexts/TasksContext"
 
@@ -233,19 +233,19 @@ export function TaskFilters({ onCreateTodo, onViewChange, currentView }: TaskFil
                         className={`${classes.viewButton} ${currentView === "list" ? classes.activeViewButton : ""}`}
                         onClick={() => onViewChange("list")}
                     >
-                        List
+                        <Typography variant="body2">List</Typography>
                     </Button>
                     <Button
                         className={`${classes.viewButton} ${currentView === "board" ? classes.activeViewButton : ""}`}
                         onClick={() => onViewChange("board")}
                     >
-                        Board
+                        <Typography variant="body2">Board</Typography>
                     </Button>
                     <Button
                         className={`${classes.viewButton} ${currentView === "calendar" ? classes.activeViewButton : ""}`}
                         onClick={() => onViewChange("calendar")}
                     >
-                        Calendar
+                        <Typography variant="body2">Calendar</Typography>
                     </Button>
                 </div>
             </div>
@@ -256,43 +256,67 @@ export function TaskFilters({ onCreateTodo, onViewChange, currentView }: TaskFil
                 <div className={classes.filtersRow}>
                     <div className={classes.filtersSection}>
                         <div className={classes.filterGroup}>
-                            <Typography variant="caption" className={classes.filterLabel}>
+                            <Typography variant="caption.medium" className={classes.filterLabel}>
                                 Facilities
                             </Typography>
                             <FormControl fullWidth size="small">
                                 <Select value={facility} onChange={handleFacilityChange} displayEmpty className={classes.select}>
-                                    <MenuItem value="watersprings">Watersprings Senior Living</MenuItem>
-                                    <MenuItem value="oakview">Oakview Care Center</MenuItem>
-                                    <MenuItem value="pinegrove">Pine Grove Assisted Living</MenuItem>
+                                    <MenuItem value="watersprings">
+                                        <Typography variant="body2">Watersprings Senior Living</Typography>
+                                    </MenuItem>
+                                    <MenuItem value="oakview">
+                                        <Typography variant="body2">Oakview Care Center</Typography>
+                                    </MenuItem>
+                                    <MenuItem value="pinegrove">
+                                        <Typography variant="body2">Pine Grove Assisted Living</Typography>
+                                    </MenuItem>
                                 </Select>
                             </FormControl>
                         </div>
 
                         <div className={classes.filterGroup}>
-                            <Typography variant="caption" className={classes.filterLabel}>
+                            <Typography variant="caption.medium" className={classes.filterLabel}>
                                 Task Type
                             </Typography>
                             <FormControl fullWidth size="small">
                                 <Select value={taskType} onChange={handleTaskTypeChange} displayEmpty className={classes.select}>
-                                    <MenuItem value="">All Types</MenuItem>
-                                    <MenuItem value="todo">To Do</MenuItem>
-                                    <MenuItem value="consult">Consult</MenuItem>
-                                    <MenuItem value="review">Review</MenuItem>
+                                    <MenuItem value="">
+                                        <Typography variant="body2">All Types</Typography>
+                                    </MenuItem>
+                                    <MenuItem value="todo">
+                                        <Typography variant="body2">To Do</Typography>
+                                    </MenuItem>
+                                    <MenuItem value="consult">
+                                        <Typography variant="body2">Consult</Typography>
+                                    </MenuItem>
+                                    <MenuItem value="review">
+                                        <Typography variant="body2">Review</Typography>
+                                    </MenuItem>
                                 </Select>
                             </FormControl>
                         </div>
 
                         <div className={classes.filterGroup}>
-                            <Typography variant="caption" className={classes.filterLabel}>
+                            <Typography variant="caption.medium" className={classes.filterLabel}>
                                 Due Date
                             </Typography>
                             <FormControl fullWidth size="small">
                                 <Select value={dueDate} onChange={handleDueDateChange} displayEmpty className={classes.select}>
-                                    <MenuItem value="all">All</MenuItem>
-                                    <MenuItem value="today">Today</MenuItem>
-                                    <MenuItem value="tomorrow">Tomorrow</MenuItem>
-                                    <MenuItem value="this-week">This Week</MenuItem>
-                                    <MenuItem value="next-week">Next Week</MenuItem>
+                                    <MenuItem value="all">
+                                        <Typography variant="body2">All</Typography>
+                                    </MenuItem>
+                                    <MenuItem value="today">
+                                        <Typography variant="body2">Today</Typography>
+                                    </MenuItem>
+                                    <MenuItem value="tomorrow">
+                                        <Typography variant="body2">Tomorrow</Typography>
+                                    </MenuItem>
+                                    <MenuItem value="this-week">
+                                        <Typography variant="body2">This Week</Typography>
+                                    </MenuItem>
+                                    <MenuItem value="next-week">
+                                        <Typography variant="body2">Next Week</Typography>
+                                    </MenuItem>
                                 </Select>
                             </FormControl>
                         </div>
@@ -300,7 +324,7 @@ export function TaskFilters({ onCreateTodo, onViewChange, currentView }: TaskFil
 
                     {/* 🎯 CREATE BUTTON EN LA SEGUNDA FILA */}
                     <Button variant="contained" className={classes.createButton} onClick={onCreateTodo}>
-                        CREATE TO DO
+                        <Typography variant="button">CREATE TO DO</Typography>
                     </Button>
                 </div>
             </TabPanel>
@@ -310,27 +334,33 @@ export function TaskFilters({ onCreateTodo, onViewChange, currentView }: TaskFil
                 <div className={classes.filtersRow}>
                     <div className={classes.filtersSection}>
                         <div className={classes.filterGroup}>
-                            <Typography variant="caption" className={classes.filterLabel}>
+                            <Typography variant="caption.medium" className={classes.filterLabel}>
                                 Facilities
                             </Typography>
                             <FormControl fullWidth size="small">
                                 <Select value={facility} onChange={handleFacilityChange} displayEmpty className={classes.select}>
-                                    <MenuItem value="watersprings">Watersprings Senior Living</MenuItem>
-                                    <MenuItem value="oakview">Oakview Care Center</MenuItem>
-                                    <MenuItem value="pinegrove">Pine Grove Assisted Living</MenuItem>
+                                    <MenuItem value="watersprings">
+                                        <Typography variant="body2">Watersprings Senior Living</Typography>
+                                    </MenuItem>
+                                    <MenuItem value="oakview">
+                                        <Typography variant="body2">Oakview Care Center</Typography>
+                                    </MenuItem>
+                                    <MenuItem value="pinegrove">
+                                        <Typography variant="body2">Pine Grove Assisted Living</Typography>
+                                    </MenuItem>
                                 </Select>
                             </FormControl>
                         </div>
 
                         <div className={classes.filterGroup}>
-                            <Typography variant="caption" className={classes.filterLabel}>
+                            <Typography variant="caption.medium" className={classes.filterLabel}>
                                 Assignee
                             </Typography>
                             <div className={classes.chipContainer}>
                                 {assignees.map((assignee) => (
                                     <Chip
                                         key={assignee}
-                                        label={assignee}
+                                        label={<Typography variant="caption">{assignee}</Typography>}
                                         size="small"
                                         onDelete={() => handleRemoveAssignee(assignee)}
                                         deleteIcon={<CloseIcon fontSize="small" />}
@@ -341,16 +371,26 @@ export function TaskFilters({ onCreateTodo, onViewChange, currentView }: TaskFil
                         </div>
 
                         <div className={classes.filterGroup}>
-                            <Typography variant="caption" className={classes.filterLabel}>
+                            <Typography variant="caption.medium" className={classes.filterLabel}>
                                 Due Date
                             </Typography>
                             <FormControl fullWidth size="small">
                                 <Select value={dueDate} onChange={handleDueDateChange} displayEmpty className={classes.select}>
-                                    <MenuItem value="all">All</MenuItem>
-                                    <MenuItem value="today">Today</MenuItem>
-                                    <MenuItem value="tomorrow">Tomorrow</MenuItem>
-                                    <MenuItem value="this-week">This Week</MenuItem>
-                                    <MenuItem value="next-week">Next Week</MenuItem>
+                                    <MenuItem value="all">
+                                        <Typography variant="body2">All</Typography>
+                                    </MenuItem>
+                                    <MenuItem value="today">
+                                        <Typography variant="body2">Today</Typography>
+                                    </MenuItem>
+                                    <MenuItem value="tomorrow">
+                                        <Typography variant="body2">Tomorrow</Typography>
+                                    </MenuItem>
+                                    <MenuItem value="this-week">
+                                        <Typography variant="body2">This Week</Typography>
+                                    </MenuItem>
+                                    <MenuItem value="next-week">
+                                        <Typography variant="body2">Next Week</Typography>
+                                    </MenuItem>
                                 </Select>
                             </FormControl>
                         </div>
@@ -358,7 +398,7 @@ export function TaskFilters({ onCreateTodo, onViewChange, currentView }: TaskFil
 
                     {/* 🎯 CREATE BUTTON EN LA SEGUNDA FILA */}
                     <Button variant="contained" className={classes.createButton} onClick={onCreateTodo}>
-                        CREATE TO DO
+                        <Typography variant="button">CREATE TO DO</Typography>
                     </Button>
                 </div>
             </TabPanel>

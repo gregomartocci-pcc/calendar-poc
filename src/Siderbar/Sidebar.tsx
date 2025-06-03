@@ -1,10 +1,10 @@
 "use client"
 import type React from "react"
 import { useRef } from "react"
-import { Box, Typography, Paper, Avatar } from "@material-ui/core"
+import { Box, Paper, Avatar } from "@material-ui/core"
+import { Typography } from "@evergreen/core"
 import { makeStyles, type Theme, createStyles } from "@material-ui/core/styles"
 import { useTaskContext } from "../contexts/TasksContext"
-
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -147,7 +147,9 @@ export function Sidebar() {
 
     return (
         <Box className={classes.root}>
-            <Typography className={classes.title}>Not Scheduled</Typography>
+            <Typography variant="h4" className={classes.title}>
+                Not Scheduled
+            </Typography>
 
             <div ref={containerRef}>
                 {unscheduledTasks.map((task) => (
@@ -163,35 +165,57 @@ export function Sidebar() {
                         onDragStart={(e) => handleDragStart(e, task)}
                         onDragEnd={handleDragEnd}
                     >
-                        <Typography className={classes.taskTitle}>{task.title}</Typography>
+                        <Typography variant="subtitle1" className={classes.taskTitle}>
+                            {task.title}
+                        </Typography>
 
                         <Box className={classes.taskDetail}>
-                            <Typography className={classes.detailLabel}>Schedule Date</Typography>
-                            <Typography className={classes.detailValue}>--</Typography>
+                            <Typography variant="body2" className={classes.detailLabel}>
+                                Schedule Date
+                            </Typography>
+                            <Typography variant="body2" className={classes.detailValue}>
+                                --
+                            </Typography>
                         </Box>
 
                         <Box className={classes.taskDetail}>
-                            <Typography className={classes.detailLabel}>Due Date</Typography>
-                            <Typography className={classes.detailValue}>{task.dueDate || "--"}</Typography>
+                            <Typography variant="body2" className={classes.detailLabel}>
+                                Due Date
+                            </Typography>
+                            <Typography variant="body2" className={classes.detailValue}>
+                                {task.dueDate || "--"}
+                            </Typography>
                         </Box>
 
                         <Box className={classes.taskDetail}>
-                            <Typography className={classes.detailLabel}>Facility</Typography>
-                            <Typography className={classes.detailValue}>{task.facility || "--"}</Typography>
+                            <Typography variant="body2" className={classes.detailLabel}>
+                                Facility
+                            </Typography>
+                            <Typography variant="body2" className={classes.detailValue}>
+                                {task.facility || "--"}
+                            </Typography>
                         </Box>
 
                         <Box className={classes.taskDetail}>
-                            <Typography className={classes.detailLabel}>Assignee</Typography>
-                            <Typography className={classes.detailValue}>{task.assignee || "--"}</Typography>
+                            <Typography variant="body2" className={classes.detailLabel}>
+                                Assignee
+                            </Typography>
+                            <Typography variant="body2" className={classes.detailValue}>
+                                {task.assignee || "--"}
+                            </Typography>
                         </Box>
 
                         <Box className={classes.taskDetail}>
-                            <Typography className={classes.detailLabel}>Patient</Typography>
+                            <Typography variant="body2" className={classes.detailLabel}>
+                                Patient
+                            </Typography>
                             <Box className={classes.patientInfo}>
                                 <Avatar className={classes.avatar}>
                                     {task.patient ? task.patient.substring(0, 2).toUpperCase() : "?"}
                                 </Avatar>
-                                <Typography className={classes.patientName}>{task.patient || "Unknown"}</Typography>
+                                <Typography variant="body2" className={classes.patientName}>
+                                    {task.patient || "Unknown"}
+                                </Typography>
                             </Box>
                         </Box>
                     </Paper>
