@@ -9,12 +9,31 @@ const useStyles = makeStyles((theme: Theme) =>
     createStyles({
         kanbanContainer: {
             display: "grid",
-            gridTemplateColumns: "repeat(4, 320px)", // 🎯 MISMO ANCHO QUE EL SIDEBAR (320px)
             gap: theme.spacing(3),
             backgroundColor: "#ffffff",
             minHeight: "70vh",
-            overflowX: "auto", // 🎯 SCROLL HORIZONTAL SI ES NECESARIO
-            justifyContent: "start", // 🎯 ALINEAR A LA IZQUIERDA
+            // 🎯 RESPONSIVE GRID
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 320px))", // Mínimo 280px, máximo 320px
+            justifyContent: "start",
+
+            // 🎯 BREAKPOINTS ESPECÍFICOS
+            [theme.breakpoints.down("sm")]: {
+                // Móvil: 1 columna completa
+                gridTemplateColumns: "1fr",
+                gap: theme.spacing(2),
+            },
+            [theme.breakpoints.between("sm", "md")]: {
+                // Tablet: 2 columnas
+                gridTemplateColumns: "repeat(2, minmax(280px, 1fr))",
+            },
+            [theme.breakpoints.between("md", "lg")]: {
+                // Desktop pequeño: 3 columnas
+                gridTemplateColumns: "repeat(3, minmax(280px, 320px))",
+            },
+            [theme.breakpoints.up("lg")]: {
+                // Desktop grande: 4 columnas con ancho máximo del sidebar
+                gridTemplateColumns: "repeat(3, minmax(280px, 320px))",
+            },
         },
         column: {
             backgroundColor: "#f8f9fa",
@@ -22,8 +41,17 @@ const useStyles = makeStyles((theme: Theme) =>
             padding: theme.spacing(2),
             minHeight: "500px",
             border: "1px solid #e9ecef",
-            width: "320px", // 🎯 ANCHO FIJO IGUAL AL SIDEBAR
-            flexShrink: 0, // 🎯 NO SE ENCOGE
+            // 🎯 ANCHO RESPONSIVE
+            width: "100%", // Toma el ancho del grid
+            maxWidth: "320px", // Máximo igual al sidebar
+            minWidth: "280px", // Mínimo para que no se vea mal
+            flexShrink: 0,
+
+            // 🎯 EN MÓVIL, ALTURA MÁS PEQUEÑA
+            [theme.breakpoints.down("sm")]: {
+                minHeight: "300px",
+                maxWidth: "none", // En móvil puede ser más ancho
+            },
         },
         columnHeader: {
             marginBottom: theme.spacing(2),
@@ -33,6 +61,10 @@ const useStyles = makeStyles((theme: Theme) =>
             fontWeight: 600,
             fontSize: "16px",
             color: "#374151",
+            // 🎯 TÍTULO RESPONSIVE
+            [theme.breakpoints.down("sm")]: {
+                fontSize: "14px",
+            },
         },
         taskCard: {
             backgroundColor: "white",
@@ -47,12 +79,22 @@ const useStyles = makeStyles((theme: Theme) =>
                 boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
                 transform: "translateY(-1px)",
             },
+            // 🎯 PADDING RESPONSIVE
+            [theme.breakpoints.down("sm")]: {
+                padding: theme.spacing(1.5),
+                marginBottom: theme.spacing(1.5),
+            },
         },
         taskTitle: {
             fontSize: "16px",
             fontWeight: 600,
             color: "#111827",
             marginBottom: theme.spacing(2),
+            // 🎯 TÍTULO DE TAREA RESPONSIVE
+            [theme.breakpoints.down("sm")]: {
+                fontSize: "14px",
+                marginBottom: theme.spacing(1.5),
+            },
         },
         taskDetail: {
             display: "flex",
@@ -62,16 +104,30 @@ const useStyles = makeStyles((theme: Theme) =>
             "&:last-child": {
                 marginBottom: 0,
             },
+            // 🎯 EN MÓVIL, STACK VERTICAL SI ES NECESARIO
+            [theme.breakpoints.down("xs")]: {
+                flexDirection: "column",
+                alignItems: "flex-start",
+                gap: theme.spacing(0.5),
+            },
         },
         detailLabel: {
             fontSize: "14px",
             color: "#6b7280",
             fontWeight: 500,
+            // 🎯 TEXTO MÁS PEQUEÑO EN MÓVIL
+            [theme.breakpoints.down("sm")]: {
+                fontSize: "12px",
+            },
         },
         detailValue: {
             fontSize: "14px",
             color: "#111827",
             fontWeight: 500,
+            // 🎯 TEXTO MÁS PEQUEÑO EN MÓVIL
+            [theme.breakpoints.down("sm")]: {
+                fontSize: "12px",
+            },
         },
         assigneeSection: {
             display: "flex",
@@ -80,6 +136,11 @@ const useStyles = makeStyles((theme: Theme) =>
             marginTop: theme.spacing(2),
             paddingTop: theme.spacing(2),
             borderTop: "1px solid #f3f4f6",
+            // 🎯 SPACING RESPONSIVE
+            [theme.breakpoints.down("sm")]: {
+                marginTop: theme.spacing(1.5),
+                paddingTop: theme.spacing(1.5),
+            },
         },
         avatar: {
             width: 24,
@@ -87,16 +148,30 @@ const useStyles = makeStyles((theme: Theme) =>
             fontSize: "12px",
             backgroundColor: "#e5e7eb",
             color: "#374151",
+            // 🎯 AVATAR MÁS PEQUEÑO EN MÓVIL
+            [theme.breakpoints.down("sm")]: {
+                width: 20,
+                height: 20,
+                fontSize: "10px",
+            },
         },
         assigneeName: {
             fontSize: "14px",
             color: "#111827",
             fontWeight: 500,
+            // 🎯 NOMBRE RESPONSIVE
+            [theme.breakpoints.down("sm")]: {
+                fontSize: "12px",
+            },
         },
         dropZone: {
             minHeight: "400px",
             borderRadius: "8px",
             transition: "all 0.2s ease",
+            // 🎯 ALTURA RESPONSIVE
+            [theme.breakpoints.down("sm")]: {
+                minHeight: "250px",
+            },
         },
         dropZoneActive: {
             backgroundColor: "#f0fdfa",
@@ -116,16 +191,6 @@ interface Task {
 }
 
 const initialTasks: Task[] = [
-    {
-        id: "1",
-        title: "PHQ2-9 Screening",
-        scheduleDate: "--",
-        dueDate: "04/07/2025",
-        facility: "Watersprings Senior Living",
-        assignee: "Nurse",
-        assigneeName: "Emily Young",
-        column: "notscheduled",
-    },
     {
         id: "2",
         title: "Fall Risk Assessment",
@@ -149,7 +214,6 @@ const initialTasks: Task[] = [
 ]
 
 const columns = [
-    { id: "notscheduled", title: "Not Scheduled" },
     { id: "today", title: "Today (April 1)" },
     { id: "tomorrow", title: "Tomorrow (April 2)" },
     { id: "next7days", title: "Next 7 Days" },
