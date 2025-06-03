@@ -12,11 +12,12 @@ import {
     Tab,
     Typography,
     Paper,
+    Button,
     makeStyles,
     createStyles,
     type Theme,
 } from "@material-ui/core"
-import { Close as CloseIcon } from "@material-ui/icons"
+import { Close as CloseIcon, Add as AddIcon } from "@material-ui/icons"
 import { type TaskType, useTaskContext } from "../../contexts/TasksContext"
 
 // Definir interfaces para los eventos
@@ -26,8 +27,12 @@ interface TabPanelProps {
     value: number
 }
 
-// Removemos la prop onViewChange ya que no necesitamos el selector de vista
-type TaskFiltersProps = {}
+// Agregar las props que necesita el componente
+type TaskFiltersProps = {
+    onCreateTodo: () => void
+    onViewChange: (view: string) => void
+    currentView: string
+}
 
 // Crear estilos con makeStyles
 const useStyles = makeStyles((theme: Theme) =>
@@ -66,6 +71,23 @@ const useStyles = makeStyles((theme: Theme) =>
         },
         activeTab: {
             color: "#0e766e",
+        },
+        viewSelector: {
+            display: "flex",
+            gap: theme.spacing(1),
+            alignItems: "center",
+        },
+        viewButton: {
+            minWidth: "auto",
+            padding: theme.spacing(0.5, 1),
+            fontSize: "12px",
+        },
+        createButton: {
+            backgroundColor: "#0e766e",
+            color: "white",
+            "&:hover": {
+                backgroundColor: "#0d5d56",
+            },
         },
         filtersGrid: {
             display: "grid",
@@ -123,20 +145,14 @@ function a11yProps(index: number) {
     }
 }
 
-export function TaskFilters({ }: TaskFiltersProps) {
+export function TaskFilters({ onCreateTodo, onViewChange, currentView }: TaskFiltersProps) {
     const classes = useStyles()
-    const { scheduledTasks } = useTaskContext()
+    const { scheduledTasks, filterTasks } = useTaskContext()
     const [tabValue, setTabValue] = useState<number>(1)
     const [facility, setFacility] = useState<string>("watersprings")
     const [dueDate, setDueDate] = useState<string>("all")
     const [assignees, setAssignees] = useState<string[]>(["Me", "Practitioner"])
     const [taskType, setTaskType] = useState<TaskType | "">("")
-
-    // Implementamos filterTasks localmente ya que no está en el contexto
-    const filterTasks = (type?: TaskType, assignee?: string, facility?: string) => {
-        console.log(`Filtering tasks by type: ${type}, assignee: ${assignee}, facility: ${facility}`)
-        // Aquí implementarías la lógica de filtrado real
-    }
 
     const handleTabChange = (_event: React.ChangeEvent<{}>, newValue: number): void => {
         setTabValue(newValue)
@@ -164,6 +180,10 @@ export function TaskFilters({ }: TaskFiltersProps) {
         filterTasks(value || undefined, assignees[0], facility)
     }
 
+    const handleViewChange = (view: string) => {
+        onViewChange(view)
+    }
+
     return (
         <div className={classes.root}>
             <div className={classes.tabsContainer}>
@@ -171,7 +191,43 @@ export function TaskFilters({ }: TaskFiltersProps) {
                     <Tab label="All Tasks" {...a11yProps(0)} className={classes.tab} />
                     <Tab label="My Tasks" {...a11yProps(1)} className={classes.tab} />
                 </Tabs>
-                {/* Removido el selector de vista (List, Board, Calendar) */}
+
+                {/* Selector de vista y botón crear */}
+                <div className={classes.viewSelector}>
+                    <Button
+                        variant={currentView === "list" ? "contained" : "outlined"}
+                        size="small"
+                        className={classes.viewButton}
+                        onClick={() => handleViewChange("list")}
+                    >
+                        List
+                    </Button>
+                    <Button
+                        variant={currentView === "board" ? "contained" : "outlined"}
+                        size="small"
+                        className={classes.viewButton}
+                        onClick={() => handleViewChange("board")}
+                    >
+                        Board
+                    </Button>
+                    <Button
+                        variant={currentView === "calendar" ? "contained" : "outlined"}
+                        size="small"
+                        className={classes.viewButton}
+                        onClick={() => handleViewChange("calendar")}
+                    >
+                        Calendar
+                    </Button>
+                    <Button
+                        variant="contained"
+                        size="small"
+                        className={`${classes.viewButton} ${classes.createButton}`}
+                        startIcon={<AddIcon />}
+                        onClick={onCreateTodo}
+                    >
+                        Create TO DO
+                    </Button>
+                </div>
             </div>
 
             <TabPanel value={tabValue} index={0}>

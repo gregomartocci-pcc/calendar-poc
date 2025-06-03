@@ -5,6 +5,7 @@ import { Box, Typography, Paper, Avatar } from "@material-ui/core"
 import { makeStyles, type Theme, createStyles } from "@material-ui/core/styles"
 import { useTaskContext } from "../contexts/TasksContext"
 
+
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
         root: {

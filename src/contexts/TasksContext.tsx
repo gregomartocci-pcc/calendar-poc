@@ -1,185 +1,106 @@
 "use client"
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react"
+import type React from "react"
+import { createContext, useContext, useState } from "react"
 
-// Tipos
 export type TaskType = "todo" | "consult" | "review"
 
 export interface Task {
   id: string
   title: string
   type: TaskType
-  date?: string
-  dueDate?: string
+  patient?: string
   facility?: string
   assignee?: string
-  patient?: string
+  dueDate?: string
+  scheduledDate?: string
 }
-
-type ScheduledTasksMap = Record<string, Task[]>
 
 interface TaskContextType {
   unscheduledTasks: Task[]
-  scheduledTasks: ScheduledTasksMap
-  scheduleTask: (taskId: string, date: string) => void
-  unscheduleTask: (taskId: string) => void
-  filterTasks?: (type?: TaskType, assignee?: string, facility?: string) => void
+  scheduledTasks: Task[]
+  removeTaskFromUnscheduled: (taskId: string) => void
+  addTaskToUnscheduled: (task: Task) => void
+  addTaskToScheduled: (task: Task) => void
+  filterTasks: (type?: TaskType, assignee?: string, facility?: string) => void
 }
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined)
 
-export function useTaskContext() {
-  const context = useContext(TaskContext)
-  if (!context) {
-    throw new Error("useTaskContext must be used within a TaskProvider")
-  }
-  return context
-}
-
-interface TaskProviderProps {
-  children: ReactNode
-}
-
-export function TaskProvider({ children }: TaskProviderProps) {
-  // Tareas no programadas
+export function TaskProvider({ children }: { children: React.ReactNode }) {
   const [unscheduledTasks, setUnscheduledTasks] = useState<Task[]>([
     {
       id: "task-1",
       title: "Med Review",
       type: "review",
-      dueDate: "04/30/2025",
-      facility: "Watersprings Senior Living",
-      assignee: "Practitioner",
-      patient: "Daniel Cook",
+      patient: "John Doe",
+      facility: "Hospital Central",
+      assignee: "Dr. Smith",
+      dueDate: "2025-05-20",
+    },
+    {
+      id: "task-2",
+      title: "Consultation",
+      type: "consult",
+      patient: "Jane Smith",
+      facility: "Clinic North",
+      assignee: "Dr. Johnson",
+      dueDate: "2025-05-22",
     },
   ])
 
-  // Tareas programadas por fecha
-  const [scheduledTasks, setScheduledTasks] = useState<ScheduledTasksMap>({
-    "2025-04-01": [
-      { id: "scheduled-1", title: "To Do example", type: "todo", date: "2025-04-01" },
-      { id: "scheduled-2", title: "To Do example", type: "todo", date: "2025-04-01" },
-      { id: "scheduled-3", title: "To Do example", type: "todo", date: "2025-04-01" },
-      { id: "scheduled-4", title: "To Do example", type: "todo", date: "2025-04-01" },
-    ],
-    "2025-04-02": [{ id: "scheduled-5", title: "To Do example", type: "todo", date: "2025-04-02" }],
-    "2025-04-03": [{ id: "scheduled-6", title: "PHQ2-9 Consult", type: "consult", date: "2025-04-03" }],
-  })
+  const [scheduledTasks, setScheduledTasks] = useState<Task[]>([])
 
-  // Usar un Set para rastrear las operaciones en progreso
-  const [operationsInProgress, setOperationsInProgress] = useState<Set<string>>(new Set())
+  const removeTaskFromUnscheduled = (taskId: string) => {
+    console.log(`🗑️ Context: Removing task with ID: ${taskId}`)
+    console.log(
+      `🗑️ Current unscheduled tasks:`,
+      unscheduledTasks.map((t) => ({ id: t.id, title: t.title })),
+    )
 
-  // Programar una tarea con protección contra duplicación
-  const scheduleTask = useCallback(
-    (taskId: string, date: string) => {
-      const operationKey = `${taskId}-${date}`
+    setUnscheduledTasks((prev) => {
+      const filtered = prev.filter((task) => task.id !== taskId)
+      console.log(
+        `🗑️ Tasks after filtering:`,
+        filtered.map((t) => ({ id: t.id, title: t.title })),
+      )
+      return filtered
+    })
+  }
 
-      console.log(`Attempting to schedule task ${taskId} for date ${date}`)
+  const addTaskToUnscheduled = (task: Task) => {
+    setUnscheduledTasks((prev) => [...prev, task])
+  }
 
-      // Verificar si esta operación ya está en progreso
-      if (operationsInProgress.has(operationKey)) {
-        console.log(`Operation ${operationKey} already in progress, skipping`)
-        return
-      }
+  const addTaskToScheduled = (task: Task) => {
+    setScheduledTasks((prev) => [...prev, task])
+  }
 
-      // Marcar la operación como en progreso
-      setOperationsInProgress((prev) => new Set(prev).add(operationKey))
-
-      // Usar setTimeout para asegurar que la operación se ejecute de forma asíncrona
-      setTimeout(() => {
-        setUnscheduledTasks((currentUnscheduled) => {
-          const task = currentUnscheduled.find((t) => t.id === taskId)
-          if (!task) {
-            console.log(`Task ${taskId} not found in unscheduled tasks`)
-            // Limpiar la operación
-            setOperationsInProgress((prev) => {
-              const newSet = new Set(prev)
-              newSet.delete(operationKey)
-              return newSet
-            })
-            return currentUnscheduled
-          }
-
-          // Verificar si la tarea ya está programada para esta fecha
-          setScheduledTasks((currentScheduled) => {
-            const isAlreadyScheduled = currentScheduled[date]?.some((t) => t.id === taskId)
-            if (isAlreadyScheduled) {
-              console.log(`Task ${taskId} is already scheduled for ${date}`)
-              // Limpiar la operación
-              setOperationsInProgress((prev) => {
-                const newSet = new Set(prev)
-                newSet.delete(operationKey)
-                return newSet
-              })
-              return currentScheduled
-            }
-
-            // Añadir la tarea a las tareas programadas
-            const newScheduledTasks = { ...currentScheduled }
-            if (!newScheduledTasks[date]) {
-              newScheduledTasks[date] = []
-            }
-            newScheduledTasks[date] = [...newScheduledTasks[date], { ...task, date }]
-
-            console.log(`Task ${taskId} successfully scheduled for ${date}`)
-
-            // Limpiar la operación
-            setOperationsInProgress((prev) => {
-              const newSet = new Set(prev)
-              newSet.delete(operationKey)
-              return newSet
-            })
-
-            return newScheduledTasks
-          })
-
-          // Eliminar la tarea de las tareas no programadas
-          return currentUnscheduled.filter((t) => t.id !== taskId)
-        })
-      }, 0)
-    },
-    [operationsInProgress],
-  )
-
-  // Desprogramar una tarea
-  const unscheduleTask = useCallback(
-    (taskId: string) => {
-      // Buscar la tarea en las tareas programadas
-      let taskToUnschedule: Task | undefined
-      let dateToRemoveFrom: string | undefined
-
-      Object.entries(scheduledTasks).forEach(([date, tasks]) => {
-        const task = tasks.find((t) => t.id === taskId)
-        if (task) {
-          taskToUnschedule = task
-          dateToRemoveFrom = date
-        }
-      })
-
-      if (!taskToUnschedule || !dateToRemoveFrom) return
-
-      // Eliminar la tarea de las tareas programadas
-      setScheduledTasks((prev) => {
-        const newScheduledTasks = { ...prev }
-        newScheduledTasks[dateToRemoveFrom!] = newScheduledTasks[dateToRemoveFrom!].filter((t) => t.id !== taskId)
-        return newScheduledTasks
-      })
-
-      // Añadir la tarea a las tareas no programadas
-      setUnscheduledTasks((prev) => [...prev, { ...taskToUnschedule!, date: undefined }])
-    },
-    [scheduledTasks],
-  )
-
-  // Implementación de filterTasks
-  const filterTasks = useCallback((type?: TaskType, assignee?: string, facility?: string) => {
+  const filterTasks = (type?: TaskType, assignee?: string, facility?: string) => {
     console.log(`Filtering tasks by type: ${type}, assignee: ${assignee}, facility: ${facility}`)
     // Aquí implementarías la lógica de filtrado real
-  }, [])
+  }
 
   return (
-    <TaskContext.Provider value={{ unscheduledTasks, scheduledTasks, scheduleTask, unscheduleTask, filterTasks }}>
+    <TaskContext.Provider
+      value={{
+        unscheduledTasks,
+        scheduledTasks,
+        removeTaskFromUnscheduled,
+        addTaskToUnscheduled,
+        addTaskToScheduled,
+        filterTasks,
+      }}
+    >
       {children}
     </TaskContext.Provider>
   )
+}
+
+export function useTaskContext() {
+  const context = useContext(TaskContext)
+  if (context === undefined) {
+    throw new Error("useTaskContext must be used within a TaskProvider")
+  }
+  return context
 }

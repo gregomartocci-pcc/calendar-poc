@@ -11,7 +11,7 @@ import { Sidebar } from "./Siderbar/Sidebar"
 
 import CalendarView from "./components/CalendarView/CalendarView"
 import { MUIKanbanBoard } from "./components/KanbanBoard/KanbanBoard"
-import { TaskFilters } from "./components/TaskFilters/TaskFilters"
+import { TaskFilters } from "./components/TasksFilters/TasksFilters"
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
