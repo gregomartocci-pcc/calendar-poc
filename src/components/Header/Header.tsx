@@ -6,6 +6,7 @@ import { KeyboardArrowDown, Notifications, Help, AccountCircle } from "@material
 import { makeStyles } from "@material-ui/core/styles"
 import { Header as PCCHeader } from "@evergreen/core-header"
 import { PageHeader } from "../PageHeader/PageHeader"
+import { Typography } from "@evergreen/core"
 
 const useStyles = makeStyles((theme) => ({
     headerContainer: {
@@ -30,7 +31,6 @@ const useStyles = makeStyles((theme) => ({
         "& .MuiSelect-select": {
             fontWeight: 500,
             color: "#4a5568",
-            fontSize: "14px",
         },
     },
     iconButton: {
@@ -164,9 +164,7 @@ export function Header() {
     return (
         <Box className={classes.headerContainer}>
             {/* PCC Header replacing AppBar */}
-            <PCCHeader
-                headerText
-            >
+            <PCCHeader headerText>
                 <div className={classes.headerChildren}>
                     <FormControl className={classes.facilitySelect}>
                         <Select value="watersprings" displayEmpty IconComponent={KeyboardArrowDown}>
@@ -199,9 +197,12 @@ export function Header() {
             </PCCHeader>
 
             {/* Main Navigation */}
-            <Toolbar className={classes.bottomToolbar} style={{
-                marginTop: "65px"
-            }}>
+            <Toolbar
+                className={classes.bottomToolbar}
+                style={{
+                    marginTop: "65px",
+                }}
+            >
                 <Box className={classes.navigationContainer}>
                     {navigationItems.map((item) => (
                         <React.Fragment key={item.label}>
@@ -210,7 +211,9 @@ export function Header() {
                                 onClick={item.hasDropdown ? (e) => handleMenuOpen(e, item.label) : () => handleNavClick(item.label)}
                                 endIcon={item.hasDropdown ? <KeyboardArrowDown style={{ fontSize: "16px" }} /> : null}
                             >
-                                {item.label}
+                                <Typography variant="body2" color="inherit">
+                                    {item.label}
+                                </Typography>
                             </Button>
 
                             {item.hasDropdown && item.dropdownItems && (
@@ -241,11 +244,10 @@ export function Header() {
                                             key={dropdownItem}
                                             onClick={() => handleMenuItemClick(item.label, dropdownItem)}
                                             style={{
-                                                fontSize: "14px",
                                                 padding: "8px 16px",
                                             }}
                                         >
-                                            {dropdownItem}
+                                            <Typography variant="body2">{dropdownItem}</Typography>
                                         </MenuItem>
                                     ))}
                                 </Menu>
@@ -257,7 +259,7 @@ export function Header() {
                 <Box className={classes.flexGrow} />
 
                 <Button className={classes.searchButton} onClick={handleSearchClick}>
-                    Search
+                    <Typography variant="button">Search</Typography>
                 </Button>
             </Toolbar>
 

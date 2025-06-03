@@ -41,12 +41,12 @@ export default function CalendarView() {
     const calendarRef = useRef<FullCalendar>(null)
     const { removeTaskFromUnscheduled, calendarEvents, addEventToCalendar } = useTaskContext()
 
-    // Estados para el modal
+    // States for the modal
     const [openModal, setOpenModal] = useState(false)
     const [selectedDateEvents, setSelectedDateEvents] = useState<Task[]>([])
     const [selectedDate, setSelectedDate] = useState<string>("")
 
-    // Funciones para obtener colores según el tipo de tarea
+    // Functions to get colors based on task type
     const getTaskBackgroundColor = (type: string): string => {
         switch (type) {
             case "todo":
@@ -86,14 +86,15 @@ export default function CalendarView() {
         }
     }
 
-    // 🎯 USAR EVENTOS DEL CONTEXTO
+    // USE EVENTS FROM CONTEXT
     const getEvents = () => {
         console.log("🔍 Getting events from context:", calendarEvents)
         return Object.entries(calendarEvents).flatMap(([date, tasks]) =>
             tasks.map((task) => ({
                 id: task.id,
                 title: task.title,
-                start: date,
+                start: task.startTime ? `${date}T${task.startTime}:00` : date,
+                end: task.endTime ? `${date}T${task.endTime}:00` : undefined,
                 backgroundColor: getTaskBackgroundColor(task.type),
                 borderColor: getTaskBorderColor(task.type),
                 textColor: getTaskTextColor(task.type),
@@ -104,15 +105,16 @@ export default function CalendarView() {
                     assignee: task.assignee,
                     startTime: task.startTime,
                     endTime: task.endTime,
+                    timezone: task.timezone,
+                    description: task.description,
                 },
             })),
         )
     }
 
-    // Formatear fecha para mostrar en el modal
     const formatDate = (dateStr: string): string => {
         const date = new Date(dateStr + "T00:00:00")
-        return date.toLocaleDateString("es-ES", {
+        return date.toLocaleDateString("en-US", {
             weekday: "long",
             year: "numeric",
             month: "long",
@@ -120,7 +122,16 @@ export default function CalendarView() {
         })
     }
 
-    // 🎯 CALLBACK PARA CUANDO SE HACE CLICK EN UNA FECHA
+    const formatTime = (time: string): string => {
+        if (!time) return ""
+        const [hours, minutes] = time.split(":")
+        const hour = Number.parseInt(hours)
+        const ampm = hour >= 12 ? "PM" : "AM"
+        const displayHour = hour % 12 || 12
+        return `${displayHour}:${minutes} ${ampm}`
+    }
+
+    // CALLBACK FOR DATE CLICK
     const handleDateClick = (info: any) => {
         console.log(`🎯 Clicked on date: ${info.dateStr}`)
         const events = calendarEvents[info.dateStr] || []
@@ -131,7 +142,7 @@ export default function CalendarView() {
         setOpenModal(true)
     }
 
-    // 🎯 MANEJAR DROP NATIVO
+    // HANDLE NATIVE DROP
     const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault()
 
@@ -142,7 +153,7 @@ export default function CalendarView() {
             const task = JSON.parse(taskData)
             console.log("🔍 Task data received:", task)
 
-            // Obtener la fecha del día donde se soltó
+            // Get the date of the day where it was dropped
             const element = document.elementFromPoint(e.clientX, e.clientY)
             if (!element) return
 
@@ -154,23 +165,23 @@ export default function CalendarView() {
 
             console.log(`📦 Dropping task "${task.title}" on ${date}`)
 
-            // Verificar que no existe ya este evento en esta fecha
+            // Check if this event already exists on this date
             const existingEvents = calendarEvents[date] || []
             const isDuplicate = existingEvents.some((event) => event.id === task.id)
 
             if (!isDuplicate) {
-                // 🎯 USAR FUNCIÓN DEL CONTEXTO
+                // 🎯 USE CONTEXT FUNCTION
                 addEventToCalendar(task, date)
 
-                // 🎯 REMOVER LA TAREA DEL SIDEBAR
+                // 🎯 REMOVE TASK FROM SIDEBAR
                 if (removeTaskFromUnscheduled && task.id) {
                     console.log(`🗑️ Attempting to remove task with ID: ${task.id}`)
                     removeTaskFromUnscheduled(task.id)
                     console.log(`🗑️ Remove function called for task ${task.id}`)
                 }
-                console.log(`✅ Evento agregado exitosamente`)
+                console.log(`✅ Event added successfully`)
             } else {
-                console.log(`⚠️ Evento ya existe, no se duplicará`)
+                console.log(`⚠️ Event already exists, won't duplicate`)
             }
         } catch (error) {
             console.error("Error handling drop:", error)
@@ -191,7 +202,7 @@ export default function CalendarView() {
         return "popover"
     }
 
-    // Contenido del modal
+    // Modal content
     const content = (
         <div style={{ display: "flex", flexDirection: "column", gap: "16px", maxHeight: "400px", overflowY: "auto" }}>
             {selectedDateEvents.length > 0 ? (
@@ -205,49 +216,107 @@ export default function CalendarView() {
                             color: getTaskTextColor(event.type),
                         }}
                     >
-                        <Typography variant="body1" style={{ fontWeight: "bold", marginBottom: "4px" }}>
+                        <Typography variant="body1" style={{ fontWeight: "bold", marginBottom: "8px", fontSize: "16px" }}>
                             {event.title}
                         </Typography>
-                        <Typography variant="caption" style={{ fontSize: "12px", opacity: 0.8, textTransform: "uppercase" }}>
-                            Tipo: {event.type}
+
+                        <Typography
+                            variant="caption"
+                            style={{
+                                fontSize: "12px",
+                                opacity: 0.8,
+                                textTransform: "uppercase",
+                                marginBottom: "8px",
+                                display: "block",
+                            }}
+                        >
+                            Type: {event.type}
                         </Typography>
+
                         {event.patient && (
-                            <Typography variant="caption" style={{ fontSize: "11px", marginTop: "4px", display: "block" }}>
-                                👤 Paciente: {event.patient}
+                            <Typography variant="caption" style={{ fontSize: "12px", marginBottom: "4px", display: "block" }}>
+                                👤 <strong>Patient:</strong> {event.patient}
                             </Typography>
                         )}
+
                         {event.facility && (
-                            <Typography variant="caption" style={{ fontSize: "11px", display: "block" }}>
-                                🏥 Facility: {event.facility}
+                            <Typography variant="caption" style={{ fontSize: "12px", marginBottom: "4px", display: "block" }}>
+                                🏥 <strong>Facility:</strong> {event.facility}
                             </Typography>
                         )}
+
                         {event.assignee && (
-                            <Typography variant="caption" style={{ fontSize: "11px", display: "block" }}>
-                                👨‍⚕️ Asignado: {event.assignee}
+                            <Typography variant="caption" style={{ fontSize: "12px", marginBottom: "4px", display: "block" }}>
+                                👨‍⚕️ <strong>Assignee:</strong> {event.assignee}
                             </Typography>
                         )}
+
                         {event.startTime && event.endTime && (
-                            <Typography variant="caption" style={{ fontSize: "11px", display: "block" }}>
-                                🕐 Horario: {event.startTime} - {event.endTime}
+                            <Typography variant="caption" style={{ fontSize: "12px", marginBottom: "4px", display: "block" }}>
+                                🕐 <strong>Time:</strong> {formatTime(event.startTime)} - {formatTime(event.endTime)}
                             </Typography>
                         )}
+
+                        {event.timezone && (
+                            <Typography variant="caption" style={{ fontSize: "12px", marginBottom: "4px", display: "block" }}>
+                                🌍 <strong>Timezone:</strong> {event.timezone}
+                            </Typography>
+                        )}
+
+                        {event.dueDate && (
+                            <Typography variant="caption" style={{ fontSize: "12px", marginBottom: "4px", display: "block" }}>
+                                📅 <strong>Due Date:</strong> {event.dueDate}
+                            </Typography>
+                        )}
+
+                        {event.description && (
+                            <Typography
+                                variant="caption"
+                                style={{ fontSize: "12px", marginBottom: "4px", display: "block", fontStyle: "italic" }}
+                            >
+                                📝 <strong>Description:</strong> {event.description}
+                            </Typography>
+                        )}
+
+                        {event.createdAt && (
+                            <Typography
+                                variant="caption"
+                                style={{ fontSize: "11px", opacity: 0.7, display: "block", marginTop: "8px" }}
+                            >
+                                📋 <strong>Created:</strong>{" "}
+                                {new Date(event.createdAt).toLocaleDateString("en-US", {
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                })}
+                            </Typography>
+                        )}
+
+                        <Typography
+                            variant="caption"
+                            style={{ fontSize: "11px", opacity: 0.7, display: "block", marginTop: "4px" }}
+                        >
+                            🆔 <strong>ID:</strong> {event.id}
+                        </Typography>
                     </div>
                 ))
             ) : (
-                <DialogContentText>No hay eventos programados para {formatDate(selectedDate)}</DialogContentText>
+                <DialogContentText>No events scheduled for {formatDate(selectedDate)}</DialogContentText>
             )}
         </div>
     )
 
-    // Acciones del modal
+    // Modal actions
     const actions = (
-        <Button color="primary" label="Cerrar" onClick={() => setOpenModal(false)} size="small" variant="contained" />
+        <Button color="primary" label="Close" onClick={() => setOpenModal(false)} size="small" variant="contained" />
     )
 
-    // Header del modal
+    // Modal header
     const title = (
         <Typography variant="h4" style={{ color: "#333", fontWeight: "bold" }}>
-            Eventos para {formatDate(selectedDate)}
+            Events for {formatDate(selectedDate)}
             {selectedDateEvents.length > 0 && (
                 <span
                     style={{
@@ -272,7 +341,7 @@ export default function CalendarView() {
     return (
         <Box className={classes.root}>
             <div className={classes.calendarContainer} onDrop={handleDrop} onDragOver={handleDragOver}>
-                {/* 🎯 COMPONENTE REACT DE FULLCALENDAR */}
+                {/* 🎯 FULLCALENDAR REACT COMPONENT */}
                 <FullCalendar
                     ref={calendarRef}
                     plugins={[dayGridPlugin, interactionPlugin]}
