@@ -39,44 +39,12 @@ const useStyles = makeStyles(() => ({
 export default function CalendarView() {
     const classes = useStyles()
     const calendarRef = useRef<FullCalendar>(null)
-    const { removeTaskFromUnscheduled } = useTaskContext()
+    const { removeTaskFromUnscheduled, calendarEvents, addEventToCalendar } = useTaskContext()
 
     // Estados para el modal
     const [openModal, setOpenModal] = useState(false)
     const [selectedDateEvents, setSelectedDateEvents] = useState<Task[]>([])
     const [selectedDate, setSelectedDate] = useState<string>("")
-
-    // 🎯 EVENTOS DE MOCKUP - Fechas de MAYO 2025 para que los veas
-    const [mockEvents, setMockEvents] = useState<{ [date: string]: Task[] }>({
-        "2025-05-01": [
-            {
-                id: "mock-1",
-                title: "Reunión de Equipo",
-                type: "todo",
-                patient: "Juan Pérez",
-                facility: "Hospital Central",
-                assignee: "Dr. García",
-            },
-            {
-                id: "mock-2",
-                title: "Consulta Médica",
-                type: "consult",
-                patient: "María López",
-                facility: "Clínica Norte",
-                assignee: "Dr. Martínez",
-            },
-        ],
-        "2025-05-05": [
-            {
-                id: "mock-3",
-                title: "Revisión de Expediente",
-                type: "review",
-                patient: "Carlos Ruiz",
-                facility: "Hospital Central",
-                assignee: "Enfermera Ana",
-            },
-        ],
-    })
 
     // Funciones para obtener colores según el tipo de tarea
     const getTaskBackgroundColor = (type: string): string => {
@@ -118,9 +86,10 @@ export default function CalendarView() {
         }
     }
 
-    // Convertir los eventos de mockup al formato de FullCalendar
+    // 🎯 USAR EVENTOS DEL CONTEXTO
     const getEvents = () => {
-        return Object.entries(mockEvents).flatMap(([date, tasks]) =>
+        console.log("🔍 Getting events from context:", calendarEvents)
+        return Object.entries(calendarEvents).flatMap(([date, tasks]) =>
             tasks.map((task) => ({
                 id: task.id,
                 title: task.title,
@@ -133,6 +102,8 @@ export default function CalendarView() {
                     patient: task.patient,
                     facility: task.facility,
                     assignee: task.assignee,
+                    startTime: task.startTime,
+                    endTime: task.endTime,
                 },
             })),
         )
@@ -152,7 +123,7 @@ export default function CalendarView() {
     // 🎯 CALLBACK PARA CUANDO SE HACE CLICK EN UNA FECHA
     const handleDateClick = (info: any) => {
         console.log(`🎯 Clicked on date: ${info.dateStr}`)
-        const events = mockEvents[info.dateStr] || []
+        const events = calendarEvents[info.dateStr] || []
         console.log(`📅 Found ${events.length} events for ${info.dateStr}:`, events)
 
         setSelectedDateEvents(events)
@@ -170,14 +141,8 @@ export default function CalendarView() {
 
             const task = JSON.parse(taskData)
             console.log("🔍 Task data received:", task)
-            console.log("🔍 Task ID:", task.id)
-            console.log("🔍 removeTaskFromUnscheduled function:", removeTaskFromUnscheduled)
 
             // Obtener la fecha del día donde se soltó
-            const rect = e.currentTarget.getBoundingClientRect()
-            const x = e.clientX - rect.left
-            const y = e.clientY - rect.top
-
             const element = document.elementFromPoint(e.clientX, e.clientY)
             if (!element) return
 
@@ -189,43 +154,20 @@ export default function CalendarView() {
 
             console.log(`📦 Dropping task "${task.title}" on ${date}`)
 
-            // Crear el nuevo evento
-            const newEvent: Task = {
-                id: task.id || `dragged-${Date.now()}-${Math.random()}`,
-                title: task.title,
-                type: task.type || "todo",
-                patient: task.patient || "Paciente Arrastrado",
-                facility: task.facility || "Facility desde Drag",
-                assignee: task.assignee || "Asignado por Drag",
-            }
-
             // Verificar que no existe ya este evento en esta fecha
-            const existingEvents = mockEvents[date] || []
-            const isDuplicate = existingEvents.some((event) => event.id === newEvent.id)
+            const existingEvents = calendarEvents[date] || []
+            const isDuplicate = existingEvents.some((event) => event.id === task.id)
 
             if (!isDuplicate) {
-                // Agregar el evento al estado
-                setMockEvents((prev) => {
-                    const updated = {
-                        ...prev,
-                        [date]: [...(prev[date] || []), newEvent],
-                    }
-                    console.log(`✅ Updated events for ${date}:`, updated[date])
-                    return updated
-                })
+                // 🎯 USAR FUNCIÓN DEL CONTEXTO
+                addEventToCalendar(task, date)
 
                 // 🎯 REMOVER LA TAREA DEL SIDEBAR
                 if (removeTaskFromUnscheduled && task.id) {
                     console.log(`🗑️ Attempting to remove task with ID: ${task.id}`)
                     removeTaskFromUnscheduled(task.id)
                     console.log(`🗑️ Remove function called for task ${task.id}`)
-                } else {
-                    console.log("❌ Cannot remove task - missing function or ID:", {
-                        hasFunction: !!removeTaskFromUnscheduled,
-                        taskId: task.id,
-                    })
                 }
-
                 console.log(`✅ Evento agregado exitosamente`)
             } else {
                 console.log(`⚠️ Evento ya existe, no se duplicará`)
@@ -242,7 +184,7 @@ export default function CalendarView() {
 
     const handleMoreLinkClick = (info: any) => {
         const dateStr = info.date.toISOString().split("T")[0]
-        const events = mockEvents[dateStr] || []
+        const events = calendarEvents[dateStr] || []
         setSelectedDateEvents(events)
         setSelectedDate(dateStr)
         setOpenModal(true)
@@ -282,6 +224,11 @@ export default function CalendarView() {
                         {event.assignee && (
                             <Typography variant="caption" style={{ fontSize: "11px", display: "block" }}>
                                 👨‍⚕️ Asignado: {event.assignee}
+                            </Typography>
+                        )}
+                        {event.startTime && event.endTime && (
+                            <Typography variant="caption" style={{ fontSize: "11px", display: "block" }}>
+                                🕐 Horario: {event.startTime} - {event.endTime}
                             </Typography>
                         )}
                     </div>
@@ -325,7 +272,7 @@ export default function CalendarView() {
     return (
         <Box className={classes.root}>
             <div className={classes.calendarContainer} onDrop={handleDrop} onDragOver={handleDragOver}>
-                {/* 🎯 COMPONENTE REACT DE FULLCALENDAR - SIN DRAG & DROP */}
+                {/* 🎯 COMPONENTE REACT DE FULLCALENDAR */}
                 <FullCalendar
                     ref={calendarRef}
                     plugins={[dayGridPlugin, interactionPlugin]}
@@ -345,7 +292,6 @@ export default function CalendarView() {
                         minute: "2-digit",
                         meridiem: "short",
                     }}
-                    // 🎯 SOLO dateClick - SIN droppable, drop, eventReceive
                     dateClick={handleDateClick}
                     moreLinkClick={handleMoreLinkClick}
                 />
