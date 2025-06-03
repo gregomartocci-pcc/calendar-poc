@@ -48,7 +48,8 @@ function AppContent() {
   const classes = useStyles()
   const [currentView, setCurrentView] = useState("calendar") // 🎯 CAMBIAR A CALENDAR PARA PROBAR
   const [createModalOpen, setCreateModalOpen] = useState(false)
-  const { addNewEvent, scheduledTasks, moveTaskToCalendar } = useTaskContext()
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const { addNewEvent, scheduledTasks, moveTaskToCalendar, deleteEvent } = useTaskContext()
 
   const handleViewChange = (view: string) => {
     console.log("Changing view to:", view)
@@ -116,6 +117,12 @@ function AppContent() {
     }
   }
 
+  // Manejar cuando se hace clic en una fecha para agregar un evento
+  const handleAddEvent = (date: Date) => {
+    setSelectedDate(date)
+    setCreateModalOpen(true)
+  }
+
   const renderView = () => {
     switch (currentView) {
       case "board":
@@ -129,9 +136,16 @@ function AppContent() {
               date: task.scheduledDate || new Date(),
               time: task.startTime,
               type: task.type,
+              patient: task.patient,
+              facility: task.facility,
+              assignee: task.assignee,
+              description: task.description,
+              startTime: task.startTime,
+              endTime: task.endTime,
             }))}
             onEventDrop={handleEventMoveInCalendar}
             onTaskDrop={handleTaskDropOnCalendar}
+            onAddEvent={handleAddEvent}
           />
         )
       case "list":
@@ -166,7 +180,12 @@ function AppContent() {
       </Box>
 
       {/* Modal para crear eventos */}
-      <CreateTaskModal open={createModalOpen} onClose={handleCloseModal} onCreateEvent={handleCreateEvent} />
+      <CreateTaskModal
+        open={createModalOpen}
+        onClose={handleCloseModal}
+        onCreateEvent={handleCreateEvent}
+        initialDate={selectedDate ? selectedDate.toISOString().split("T")[0] : undefined}
+      />
     </Box>
   )
 }

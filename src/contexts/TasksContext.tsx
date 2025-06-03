@@ -25,6 +25,7 @@ interface TaskContextType {
   filterTasks: (type?: TaskType, assignee?: string, facility?: string) => void
   addNewEvent: (task: Task) => void
   moveTaskToCalendar: (taskId: string, newDate: Date) => void
+  deleteEvent: (eventId: string) => void
 }
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined)
@@ -124,12 +125,26 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // 🎯 NUEVA FUNCIÓN: Eliminar un evento
+  const deleteEvent = (eventId: string) => {
+    console.log("🎯 Context: Deleting event:", eventId)
+
+    // Eliminar de scheduledTasks
+    setScheduledTasks((prev) => prev.filter((task) => task.id !== eventId))
+
+    // También verificar en unscheduledTasks por si acaso
+    setUnscheduledTasks((prev) => prev.filter((task) => task.id !== eventId))
+
+    console.log("✅ Context: Event deleted")
+  }
+
   const value: TaskContextType = {
     unscheduledTasks,
     scheduledTasks,
     filterTasks,
     addNewEvent,
     moveTaskToCalendar,
+    deleteEvent,
   }
 
   return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>

@@ -6,6 +6,8 @@ import { useState } from "react"
 import { Box, Button, Paper, makeStyles, createStyles, type Theme } from "@material-ui/core"
 import { ChevronLeft, ChevronRight } from "@material-ui/icons"
 import { Typography } from "@evergreen/core"
+import { DayDetailModal } from "../DayDetailModal/DayDetailModal"
+
 
 interface CalendarEvent {
     id: string
@@ -13,6 +15,12 @@ interface CalendarEvent {
     date: Date
     time?: string
     type?: "todo" | "consult" | "review"
+    patient?: string
+    facility?: string
+    assignee?: string
+    description?: string
+    startTime?: string
+    endTime?: string
 }
 
 interface CalendarViewProps {
@@ -20,7 +28,10 @@ interface CalendarViewProps {
     onEventClick?: (event: CalendarEvent) => void
     onDateClick?: (date: Date) => void
     onEventDrop?: (event: CalendarEvent, newDate: Date) => void
-    onTaskDrop?: (task: any, newDate: Date) => void // 🎯 NUEVA PROP
+    onTaskDrop?: (task: any, newDate: Date) => void
+    onAddEvent?: (date: Date) => void
+    onEditEvent?: (event: CalendarEvent) => void
+    onDeleteEvent?: (eventId: string) => void
 }
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -197,11 +208,24 @@ const useStyles = makeStyles((theme: Theme) =>
     }),
 )
 
-export function CalendarView({ events = [], onEventClick, onDateClick, onEventDrop, onTaskDrop }: CalendarViewProps) {
+export function CalendarView({
+    events = [],
+    onEventClick,
+    onDateClick,
+    onEventDrop,
+    onTaskDrop,
+    onAddEvent,
+    onEditEvent,
+    onDeleteEvent,
+}: CalendarViewProps) {
     const classes = useStyles()
     const [currentDate, setCurrentDate] = useState(new Date())
     const [currentView, setCurrentView] = useState<"Month" | "Week">("Month")
     const [draggedEvent, setDraggedEvent] = useState<CalendarEvent | null>(null)
+
+    // Estado para el modal de detalles del día
+    const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+    const [dayDetailOpen, setDayDetailOpen] = useState(false)
 
     // Get current month and year
     const currentMonth = currentDate.getMonth()
@@ -217,11 +241,25 @@ export function CalendarView({ events = [], onEventClick, onDateClick, onEventDr
 
     // Navigation functions
     const goToPreviousMonth = () => {
-        setCurrentDate(new Date(currentYear, currentMonth - 1, 1))
+        if (currentView === "Week") {
+            // Ir a la semana anterior
+            const newDate = new Date(currentDate)
+            newDate.setDate(newDate.getDate() - 7)
+            setCurrentDate(newDate)
+        } else {
+            setCurrentDate(new Date(currentYear, currentMonth - 1, 1))
+        }
     }
 
     const goToNextMonth = () => {
-        setCurrentDate(new Date(currentYear, currentMonth + 1, 1))
+        if (currentView === "Week") {
+            // Ir a la semana siguiente
+            const newDate = new Date(currentDate)
+            newDate.setDate(newDate.getDate() + 7)
+            setCurrentDate(newDate)
+        } else {
+            setCurrentDate(new Date(currentYear, currentMonth + 1, 1))
+        }
     }
 
     const goToToday = () => {
@@ -232,6 +270,25 @@ export function CalendarView({ events = [], onEventClick, onDateClick, onEventDr
     const generateCalendarDays = () => {
         const days = []
 
+        if (currentView === "Week") {
+            // 🎯 VISTA SEMANAL: Solo 7 días
+            const startOfWeek = new Date(currentDate)
+            const dayOfWeek = startOfWeek.getDay() // 0 = Sunday
+            startOfWeek.setDate(startOfWeek.getDate() - dayOfWeek) // Ir al domingo de esa semana
+
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(startOfWeek)
+                date.setDate(startOfWeek.getDate() + i)
+                days.push({
+                    date: date,
+                    isCurrentMonth: date.getMonth() === currentMonth,
+                })
+            }
+
+            return days
+        }
+
+        // 🎯 VISTA MENSUAL: Lógica existente
         // Previous month days
         const prevMonth = new Date(currentYear, currentMonth - 1, 0)
         const prevMonthDays = prevMonth.getDate()
@@ -287,6 +344,27 @@ export function CalendarView({ events = [], onEventClick, onDateClick, onEventDr
 
     // Format month name
     const formatMonth = (date: Date) => {
+        if (currentView === "Week") {
+            // Mostrar rango de la semana
+            const startOfWeek = new Date(date)
+            const dayOfWeek = startOfWeek.getDay()
+            startOfWeek.setDate(startOfWeek.getDate() - dayOfWeek)
+
+            const endOfWeek = new Date(startOfWeek)
+            endOfWeek.setDate(startOfWeek.getDate() + 6)
+
+            const startMonth = startOfWeek.toLocaleDateString("en-US", { month: "short" })
+            const endMonth = endOfWeek.toLocaleDateString("en-US", { month: "short" })
+            const startDay = startOfWeek.getDate()
+            const endDay = endOfWeek.getDate()
+
+            if (startOfWeek.getMonth() === endOfWeek.getMonth()) {
+                return `${startMonth} ${startDay} - ${endDay}, ${endOfWeek.getFullYear()}`
+            } else {
+                return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${endOfWeek.getFullYear()}`
+            }
+        }
+
         return date.toLocaleDateString("en-US", { month: "long" })
     }
 
@@ -343,11 +421,53 @@ export function CalendarView({ events = [], onEventClick, onDateClick, onEventDr
         }
     }
 
+    // Manejador para abrir el modal de detalles del día
+    const handleDayClick = (date: Date) => {
+        setSelectedDate(date)
+        setDayDetailOpen(true)
+
+        // También llamar al callback si existe
+        if (onDateClick) {
+            onDateClick(date)
+        }
+    }
+
+    // Cerrar el modal de detalles
+    const handleCloseDayDetail = () => {
+        setDayDetailOpen(false)
+    }
+
+    // Manejar la adición de un nuevo evento
+    const handleAddEvent = (date: Date) => {
+        if (onAddEvent) {
+            onAddEvent(date)
+        }
+        setDayDetailOpen(false) // Cerrar el modal de detalles
+    }
+
+    // Manejar la edición de un evento
+    // const handleEditEvent = (event: CalendarEvent) => {
+    //   if (onEditEvent) {
+    //     onEditEvent(event)
+    //   }
+    //   setDayDetailOpen(false) // Cerrar el modal de detalles
+    // }
+
+    // // Manejar la eliminación de un evento
+    // const handleDeleteEvent = (eventId: string) => {
+    //   if (onDeleteEvent) {
+    //     onDeleteEvent(eventId)
+    //   }
+    // }
+
     // Weekday names
     const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
     // Calendar days
     const calendarDays = generateCalendarDays()
+
+    // Eventos para el día seleccionado
+    const selectedDateEvents = selectedDate ? getEventsForDate(selectedDate) : []
 
     return (
         <Paper className={classes.calendarContainer}>
@@ -399,7 +519,12 @@ export function CalendarView({ events = [], onEventClick, onDateClick, onEventDr
             </Box>
 
             {/* Calendar Grid */}
-            <Box className={classes.calendarGrid}>
+            <Box
+                className={classes.calendarGrid}
+                style={{
+                    gridAutoRows: currentView === "Week" ? "minmax(200px, auto)" : "minmax(120px, auto)",
+                }}
+            >
                 {calendarDays.map((day, index) => {
                     const dayEvents = getEventsForDate(day.date)
                     const isCurrentDay = isToday(day.date)
@@ -410,7 +535,7 @@ export function CalendarView({ events = [], onEventClick, onDateClick, onEventDr
                         <Box
                             key={index}
                             className={classes.calendarCell}
-                            onClick={() => onDateClick && onDateClick(day.date)}
+                            onClick={() => handleDayClick(day.date)}
                             onDragOver={handleDragOver}
                             onDragEnter={handleDragEnter}
                             onDragLeave={handleDragLeave}
@@ -454,6 +579,15 @@ export function CalendarView({ events = [], onEventClick, onDateClick, onEventDr
                     )
                 })}
             </Box>
+
+            {/* Modal de detalles del día usando el nuevo componente */}
+            <DayDetailModal
+                open={dayDetailOpen}
+                onClose={handleCloseDayDetail}
+                date={selectedDate}
+                events={selectedDateEvents}
+                onAddEvent={handleAddEvent}
+            />
         </Paper>
     )
 }

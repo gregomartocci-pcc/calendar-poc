@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { TextField, FormControl, InputLabel, Select, MenuItem, Grid, Typography, Button } from "@material-ui/core"
 import { makeStyles, createStyles, type Theme } from "@material-ui/core/styles"
 import { Dialog } from "@evergreen/core"
@@ -11,6 +11,7 @@ interface CreateEventModalProps {
     open: boolean
     onClose: () => void
     onCreateEvent: (eventData: EventFormData) => void
+    initialDate?: string // Nueva prop para fecha inicial
 }
 
 export interface EventFormData {
@@ -63,7 +64,7 @@ const useStyles = makeStyles((theme: Theme) =>
     }),
 )
 
-export function CreateTaskModal({ open, onClose, onCreateEvent }: CreateEventModalProps) {
+export function CreateTaskModal({ open, onClose, onCreateEvent, initialDate }: CreateEventModalProps) {
     const classes = useStyles()
 
     const [formData, setFormData] = useState<EventFormData>({
@@ -78,6 +79,13 @@ export function CreateTaskModal({ open, onClose, onCreateEvent }: CreateEventMod
         timezone: "America/New_York", // Timezone por defecto
         description: "",
     })
+
+    // Actualizar la fecha cuando cambia initialDate
+    useEffect(() => {
+        if (initialDate) {
+            setFormData((prev) => ({ ...prev, date: initialDate }))
+        }
+    }, [initialDate, open])
 
     const handleInputChange =
         (field: keyof EventFormData) => (event: React.ChangeEvent<HTMLInputElement | { value: unknown }>) => {
