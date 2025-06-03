@@ -11,7 +11,6 @@ const useStyles = makeStyles((theme: Theme) =>
             display: "grid",
             gridTemplateColumns: "repeat(4, 320px)", // 🎯 MISMO ANCHO QUE EL SIDEBAR (320px)
             gap: theme.spacing(3),
-            padding: theme.spacing(2),
             backgroundColor: "#ffffff",
             minHeight: "70vh",
             overflowX: "auto", // 🎯 SCROLL HORIZONTAL SI ES NECESARIO
