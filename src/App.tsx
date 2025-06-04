@@ -12,8 +12,8 @@ import { MUIKanbanBoard } from "./components/KanbanBoard/KanbanBoard"
 import { TaskFilters } from "./components/TasksFilters/TasksFilters"
 import { CreateTaskModal, type EventFormData } from "./components/CreateTaskModal/CreateTaskModal"
 
-import { CalendarView } from "./components/CalendarView/CalendarView"
 import { Sidebar } from "./Sidebar/Sidebar"
+import CalendarView from "./components/CalendarView/CalendarView"
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({

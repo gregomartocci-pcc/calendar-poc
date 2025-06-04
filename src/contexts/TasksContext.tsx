@@ -25,6 +25,7 @@ interface TaskContextType {
   filterTasks: (type?: TaskType, assignee?: string, facility?: string) => void
   addNewEvent: (task: Task) => void
   moveTaskToCalendar: (taskId: string, newDate: Date) => void
+  moveEventToSidebar: (eventId: string) => void // Nueva función
   deleteEvent: (eventId: string) => void
 }
 
@@ -125,6 +126,31 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // 🎯 NUEVA FUNCIÓN: Mover evento del calendario al sidebar
+  const moveEventToSidebar = (eventId: string) => {
+    console.log("🎯 Context: Moving event back to sidebar:", eventId)
+
+    // Buscar el evento en las tareas programadas
+    const eventToMove = scheduledTasks.find((task) => task.id === eventId)
+
+    if (eventToMove) {
+      // Crear una copia sin la fecha programada
+      const unscheduledTask = {
+        ...eventToMove,
+        scheduledDate: undefined,
+        startTime: undefined,
+        endTime: undefined,
+        timezone: undefined,
+      }
+
+      // Remover de tareas programadas y agregar a no programadas
+      setScheduledTasks((prev) => prev.filter((task) => task.id !== eventId))
+      setUnscheduledTasks((prev) => [...prev, unscheduledTask])
+
+      console.log("✅ Context: Event moved back to sidebar (unscheduled)")
+    }
+  }
+
   // 🎯 NUEVA FUNCIÓN: Eliminar un evento
   const deleteEvent = (eventId: string) => {
     console.log("🎯 Context: Deleting event:", eventId)
@@ -144,6 +170,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     filterTasks,
     addNewEvent,
     moveTaskToCalendar,
+    moveEventToSidebar, // 🎯 NUEVA FUNCIÓN EXPORTADA
     deleteEvent,
   }
 
