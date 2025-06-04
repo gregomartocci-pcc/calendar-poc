@@ -1,46 +1,39 @@
 "use client"
 
 import type React from "react"
-
-import { useState, useRef } from "react"
-import { Box, Typography } from "@material-ui/core"
+import { useState, useRef, useEffect } from "react"
+import { Box } from "@material-ui/core"
 import { makeStyles } from "@material-ui/core/styles"
-import { Dialog, DialogContentText, Button } from "@evergreen/core"
 import FullCalendar from "@fullcalendar/react"
 import dayGridPlugin from "@fullcalendar/daygrid"
 import interactionPlugin from "@fullcalendar/interaction"
-import "./calendar-styles.css"
 
-// Tipos locales para los eventos de mockup
-interface Task {
+import "./calendar-styles.css"
+import { DayDetailModal } from "../DayDetailModal/DayDetailModal"
+
+// Tipos locales para los eventos
+interface CalendarEvent {
     id: string
     title: string
-    type: "todo" | "consult" | "review"
+    date: Date
+    time?: string
+    type?: "todo" | "consult" | "review"
     patient?: string
     facility?: string
     assignee?: string
+    description?: string
+    startTime?: string
+    endTime?: string
 }
 
 interface CalendarViewProps {
-    events?: {
-        id: string
-        title: string
-        date: Date
-        time?: string
-        type: "todo" | "consult" | "review"
-        patient?: string
-        facility?: string
-        assignee?: string
-        description?: string
-        startTime?: string
-        endTime?: string
-    }[]
-    onEventClick?: (event: any) => void
+    events?: CalendarEvent[]
+    onEventClick?: (event: CalendarEvent) => void
     onDateClick?: (date: Date) => void
-    onEventDrop?: (event: any, newDate: Date) => void
+    onEventDrop?: (event: CalendarEvent, newDate: Date) => void
     onTaskDrop?: (task: any, newDate: Date) => void
     onAddEvent?: (date: Date) => void
-    onEditEvent?: (event: any) => void
+    onEditEvent?: (event: CalendarEvent) => void
     onDeleteEvent?: (eventId: string) => void
 }
 
@@ -60,13 +53,6 @@ const useStyles = makeStyles(() => ({
             cursor: "pointer",
         },
     },
-    eventItem: {
-        padding: "12px",
-        borderRadius: "8px",
-        border: "1px solid #e0e0e0",
-        marginBottom: "8px",
-        transition: "all 0.2s ease",
-    },
 }))
 
 export default function CalendarView({
@@ -84,129 +70,107 @@ export default function CalendarView({
 
     // Estados para el modal
     const [openModal, setOpenModal] = useState(false)
-    const [selectedDateEvents, setSelectedDateEvents] = useState<Task[]>([])
-    const [selectedDate, setSelectedDate] = useState<string>("")
+    const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+    const [selectedDateEvents, setSelectedDateEvents] = useState<CalendarEvent[]>([])
 
-    // 🎯 EVENTOS DE MOCKUP - Fechas de MAYO 2025 para que los veas
-    const [mockEvents, setMockEvents] = useState<{ [date: string]: Task[] }>({
-        "2025-05-01": [
-            {
-                id: "mock-1",
-                title: "Reunión de Equipo",
-                type: "todo",
-                patient: "Juan Pérez",
-                facility: "Hospital Central",
-                assignee: "Dr. García",
-            },
-            {
-                id: "mock-2",
-                title: "Consulta Médica",
-                type: "consult",
-                patient: "María López",
-                facility: "Clínica Norte",
-                assignee: "Dr. Martínez",
-            },
-        ],
-        "2025-05-05": [
-            {
-                id: "mock-3",
-                title: "Revisión de Expediente",
-                type: "review",
-                patient: "Carlos Ruiz",
-                facility: "Hospital Central",
-                assignee: "Enfermera Ana",
-            },
-        ],
-    })
+    // Ejemplo de eventos si no se proporcionan
+    const [mockEvents, setMockEvents] = useState<CalendarEvent[]>([
+        {
+            id: "mock-1",
+            title: "To Do example",
+            date: new Date(2025, 1, 13), // 13 de febrero de 2025
+            type: "todo",
+            patient: "Juan Pérez",
+            facility: "Hospital Central",
+            assignee: "Dr. García",
+            startTime: "09:00 AM",
+            endTime: "10:00 AM",
+        },
+        {
+            id: "mock-2",
+            title: "To Do example",
+            date: new Date(2025, 1, 13), // 13 de febrero de 2025
+            type: "todo",
+            patient: "María López",
+            facility: "Clínica Norte",
+            assignee: "Dr. Martínez",
+            startTime: "11:30 AM",
+            endTime: "12:30 PM",
+        },
+        {
+            id: "mock-3",
+            title: "To Do example",
+            date: new Date(2025, 1, 13), // 13 de febrero de 2025
+            type: "todo",
+            patient: "Carlos Ruiz",
+            facility: "Hospital Central",
+            assignee: "Enfermera Ana",
+            startTime: "02:00 PM",
+            endTime: "03:00 PM",
+        },
+        {
+            id: "mock-4",
+            title: "To Do example",
+            date: new Date(2025, 1, 14), // 14 de febrero de 2025
+            type: "todo",
+            patient: "Laura Gómez",
+            facility: "Clínica Sur",
+            assignee: "Dr. Rodríguez",
+            startTime: "10:00 AM",
+            endTime: "11:00 AM",
+        },
+        {
+            id: "mock-5",
+            title: "Followup Care",
+            date: new Date(2025, 1, 18), // 18 de febrero de 2025
+            type: "consult",
+            patient: "Pedro Sánchez",
+            facility: "Hospital Este",
+            assignee: "Dra. Fernández",
+            startTime: "09:30 AM",
+            endTime: "10:30 AM",
+        },
+        {
+            id: "mock-6",
+            title: "Bi-Annual Med Review",
+            date: new Date(2025, 1, 18), // 18 de febrero de 2025
+            type: "review",
+            patient: "Ana Martínez",
+            facility: "Clínica Oeste",
+            assignee: "Dr. López",
+            startTime: "02:30 PM",
+            endTime: "03:30 PM",
+        },
+        {
+            id: "mock-7",
+            title: "Followup ICT",
+            date: new Date(2025, 1, 21), // 21 de febrero de 2025
+            type: "consult",
+            patient: "Roberto Díaz",
+            facility: "Hospital Central",
+            assignee: "Dr. González",
+            startTime: "11:00 AM",
+            endTime: "12:00 PM",
+        },
+    ])
 
-    // Funciones para obtener colores según el tipo de tarea
-    const getTaskBackgroundColor = (type: string): string => {
-        switch (type) {
-            case "todo":
-                return "#e6f7f5"
-            case "consult":
-                return "#e0f2fe"
-            case "review":
-                return "#fee6c9"
-            default:
-                return "#f3f4f6"
+    // Combinar eventos de props con mockEvents si es necesario
+    const allEvents = events.length > 0 ? events : mockEvents
+
+    // Efecto para actualizar los eventos seleccionados cuando cambia la fecha seleccionada
+    useEffect(() => {
+        if (selectedDate) {
+            const eventsForDate = allEvents.filter((event) => {
+                const eventDate = new Date(event.date)
+                return (
+                    eventDate.getFullYear() === selectedDate.getFullYear() &&
+                    eventDate.getMonth() === selectedDate.getMonth() &&
+                    eventDate.getDate() === selectedDate.getDate()
+                )
+            })
+            setSelectedDateEvents(eventsForDate)
         }
-    }
-
-    const getTaskBorderColor = (type: string): string => {
-        switch (type) {
-            case "todo":
-                return "#0e766e"
-            case "consult":
-                return "#075985"
-            case "review":
-                return "#9a3412"
-            default:
-                return "#6b7280"
-        }
-    }
-
-    const getTaskTextColor = (type: string): string => {
-        switch (type) {
-            case "todo":
-                return "#0e766e"
-            case "consult":
-                return "#075985"
-            case "review":
-                return "#9a3412"
-            default:
-                return "#374151"
-        }
-    }
-
-    // Convertir los eventos de props al formato de FullCalendar
-    const getEvents = () => {
-        // Si no hay eventos en props, usar mockEvents como fallback
-        if (events.length === 0) {
-            return Object.entries(mockEvents).flatMap(([date, tasks]) =>
-                tasks.map((task) => ({
-                    id: task.id,
-                    title: task.title,
-                    start: date,
-                    backgroundColor: getTaskBackgroundColor(task.type),
-                    borderColor: getTaskBorderColor(task.type),
-                    textColor: getTaskTextColor(task.type),
-                    extendedProps: {
-                        type: task.type,
-                        patient: task.patient,
-                        facility: task.facility,
-                        assignee: task.assignee,
-                    },
-                })),
-            )
-        }
-
-        return events.map((event) => ({
-            id: event.id,
-            title: event.title,
-            start: event.date,
-            backgroundColor: getTaskBackgroundColor(event.type),
-            borderColor: getTaskBorderColor(event.type),
-            textColor: getTaskTextColor(event.type),
-            extendedProps: {
-                type: event.type,
-                patient: event.patient,
-                facility: event.facility,
-                assignee: event.assignee,
-            },
-        }))
-    }
-
-    // Formatear fecha para mostrar en el modal
-    const formatDate = (dateStr: string): string => {
-        const date = new Date(dateStr + "T00:00:00")
-        return date.toLocaleDateString("es-ES", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-        })
-    }
+    }, [selectedDate, allEvents])
 
     // Función para crear una fecha sin problemas de zona horaria
     const createDateWithoutTimezoneIssue = (dateStr: string): Date => {
@@ -214,24 +178,106 @@ export default function CalendarView({
         return new Date(year, month - 1, day) // Mes es 0-indexado en JavaScript
     }
 
-    // 🎯 CALLBACK PARA CUANDO SE HACE CLICK EN UNA FECHA
-    const handleDateClick = (info: any) => {
-        console.log(`🎯 Clicked on date: ${info.dateStr}`)
-        const events = mockEvents[info.dateStr] || []
-        console.log(`📅 Found ${events.length} events for ${info.dateStr}:`, events)
+    // Convertir los eventos al formato de FullCalendar
+    const getFullCalendarEvents = () => {
+        return allEvents.map((event) => ({
+            id: event.id,
+            title: event.title,
+            start: event.date,
+            backgroundColor: getEventBackgroundColor(event.type),
+            borderColor: getEventBorderColor(event.type),
+            textColor: getEventTextColor(event.type),
+            extendedProps: {
+                ...event,
+                type: event.type,
+            },
+        }))
+    }
 
-        setSelectedDateEvents(events)
-        setSelectedDate(info.dateStr)
+    // Funciones para obtener colores según el tipo de evento
+    const getEventBackgroundColor = (type?: string): string => {
+        switch (type) {
+            case "todo":
+                return "#b3e3e7" // Azul claro como en el Figma
+            case "consult":
+                return "#fee6c9" // Amarillo claro para Followup Care
+            case "review":
+                return "transparent" // Transparente para Bi-Annual Med Review
+            default:
+                return "#b3e3e7" // Default azul claro
+        }
+    }
+
+    const getEventBorderColor = (type?: string): string => {
+        switch (type) {
+            case "todo":
+                return "#05576f" // Borde azul oscuro
+            case "consult":
+                return "#f59a00" // Borde amarillo/naranja
+            case "review":
+                return "#015de7" // Borde azul para texto
+            default:
+                return "#05576f" // Default azul oscuro
+        }
+    }
+
+    const getEventTextColor = (type?: string): string => {
+        switch (type) {
+            case "todo":
+                return "#05576f" // Texto azul oscuro
+            case "consult":
+                return "#05576f" // Texto azul oscuro
+            case "review":
+                return "#015de7" // Texto azul
+            default:
+                return "#05576f" // Default azul oscuro
+        }
+    }
+
+    // Manejar clic en fecha
+    const handleDateClick = (info: any) => {
+        const clickedDate = createDateWithoutTimezoneIssue(info.dateStr)
+        setSelectedDate(clickedDate)
         setOpenModal(true)
 
         if (onDateClick) {
-            // Usar la función para crear la fecha correctamente
-            const clickedDate = createDateWithoutTimezoneIssue(info.dateStr)
             onDateClick(clickedDate)
         }
     }
 
-    // 🎯 MANEJAR DROP NATIVO
+    // Manejar clic en evento
+    const handleEventClick = (info: any) => {
+        const eventId = info.event.id
+        const event = allEvents.find((e) => e.id === eventId)
+
+        if (event) {
+            setSelectedDate(new Date(event.date))
+            setOpenModal(true)
+
+            if (onEventClick) {
+                onEventClick(event)
+            }
+        }
+    }
+
+    // Manejar arrastre de evento
+    const handleEventDrop = (info: any) => {
+        const eventId = info.event.id
+        const event = allEvents.find((e) => e.id === eventId)
+
+        if (event && onEventDrop) {
+            const newDate = info.event.start
+
+            // Actualizar el evento en el estado local si estamos usando mockEvents
+            if (events.length === 0) {
+                setMockEvents((prev) => prev.map((e) => (e.id === eventId ? { ...e, date: newDate } : e)))
+            }
+
+            onEventDrop(event, newDate)
+        }
+    }
+
+    // Manejar arrastre de tarea externa
     const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault()
 
@@ -240,11 +286,6 @@ export default function CalendarView({
             if (!taskData) return
 
             const task = JSON.parse(taskData)
-
-            // Obtener la fecha del día donde se soltó
-            const rect = e.currentTarget.getBoundingClientRect()
-            const x = e.clientX - rect.left
-            const y = e.clientY - rect.top
 
             const element = document.elementFromPoint(e.clientX, e.clientY)
             if (!element) return
@@ -255,42 +296,28 @@ export default function CalendarView({
             const dateStr = dateCell.getAttribute("data-date")
             if (!dateStr) return
 
-            console.log(`📦 Dropping task "${task.title}" on ${dateStr}`)
+            const dropDate = createDateWithoutTimezoneIssue(dateStr)
 
-            // Crear el nuevo evento
-            const newEvent: Task = {
-                id: task.id || `dragged-${Date.now()}-${Math.random()}`,
-                title: task.title,
+            // Crear un nuevo evento a partir de la tarea
+            const newEvent: CalendarEvent = {
+                id: `task-${Date.now()}`,
+                title: task.title || "New Task",
+                date: dropDate,
                 type: task.type || "todo",
-                patient: task.patient || "Paciente Arrastrado",
-                facility: task.facility || "Facility desde Drag",
-                assignee: task.assignee || "Asignado por Drag",
+                patient: task.patient,
+                facility: task.facility,
+                assignee: task.assignee,
+                description: task.description,
+                startTime: task.startTime || "09:00 AM",
+                endTime: task.endTime || "10:00 AM",
             }
 
-            // Verificar que no existe ya este evento en esta fecha
-            const existingEvents = mockEvents[dateStr] || []
-            const isDuplicate = existingEvents.some((event) => event.id === newEvent.id)
-
-            if (!isDuplicate) {
-                // Agregar el evento al estado
-                setMockEvents((prev) => {
-                    const updated = {
-                        ...prev,
-                        [dateStr]: [...(prev[dateStr] || []), newEvent],
-                    }
-                    console.log(`✅ Updated events for ${dateStr}:`, updated[dateStr])
-                    return updated
-                })
-
-                console.log(`✅ Evento agregado exitosamente`)
-            } else {
-                console.log(`⚠️ Evento ya existe, no se duplicará`)
+            // Agregar el evento al estado local si estamos usando mockEvents
+            if (events.length === 0) {
+                setMockEvents((prev) => [...prev, newEvent])
             }
 
-            // Llamar al callback si existe
             if (onTaskDrop) {
-                // Usar la función para crear la fecha correctamente
-                const dropDate = createDateWithoutTimezoneIssue(dateStr)
                 onTaskDrop(task, dropDate)
             }
         } catch (error) {
@@ -303,87 +330,27 @@ export default function CalendarView({
         e.dataTransfer.dropEffect = "move"
     }
 
+    // Manejar clic en "more" link
     const handleMoreLinkClick = (info: any) => {
-        const dateStr = info.date.toISOString().split("T")[0]
-        const events = mockEvents[dateStr] || []
-        setSelectedDateEvents(events)
-        setSelectedDate(dateStr)
+        const clickedDate = info.date
+        setSelectedDate(clickedDate)
         setOpenModal(true)
         return "popover"
     }
 
-    // Contenido del modal
-    const content = (
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px", maxHeight: "400px", overflowY: "auto" }}>
-            {selectedDateEvents.length > 0 ? (
-                selectedDateEvents.map((event, index) => (
-                    <div
-                        key={`${event.id}-${index}`}
-                        className={classes.eventItem}
-                        style={{
-                            backgroundColor: getTaskBackgroundColor(event.type),
-                            borderColor: getTaskBorderColor(event.type),
-                            color: getTaskTextColor(event.type),
-                        }}
-                    >
-                        <Typography variant="body1" style={{ fontWeight: "bold", marginBottom: "4px" }}>
-                            {event.title}
-                        </Typography>
-                        <Typography variant="caption" style={{ fontSize: "12px", opacity: 0.8, textTransform: "uppercase" }}>
-                            Tipo: {event.type}
-                        </Typography>
-                        {event.patient && (
-                            <Typography variant="caption" style={{ fontSize: "11px", marginTop: "4px", display: "block" }}>
-                                👤 Paciente: {event.patient}
-                            </Typography>
-                        )}
-                        {event.facility && (
-                            <Typography variant="caption" style={{ fontSize: "11px", display: "block" }}>
-                                🏥 Facility: {event.facility}
-                            </Typography>
-                        )}
-                        {event.assignee && (
-                            <Typography variant="caption" style={{ fontSize: "11px", display: "block" }}>
-                                👨‍⚕️ Asignado: {event.assignee}
-                            </Typography>
-                        )}
-                    </div>
-                ))
-            ) : (
-                <DialogContentText>No hay eventos programados para {formatDate(selectedDate)}</DialogContentText>
-            )}
-        </div>
-    )
+    // Manejar cierre del modal
+    const handleCloseModal = () => {
+        setOpenModal(false)
+        setSelectedDate(null)
+    }
 
-    // Acciones del modal
-    const actions = (
-        <Button color="primary" label="Cerrar" onClick={() => setOpenModal(false)} size="small" variant="contained" />
-    )
-
-    // Header del modal
-    const title = (
-        <Typography variant="h4" style={{ color: "#333", fontWeight: "bold" }}>
-            Eventos para {formatDate(selectedDate)}
-            {selectedDateEvents.length > 0 && (
-                <span
-                    style={{
-                        backgroundColor: "#007bff",
-                        color: "white",
-                        borderRadius: "50%",
-                        width: "24px",
-                        height: "24px",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "12px",
-                        marginLeft: "8px",
-                    }}
-                >
-                    {selectedDateEvents.length}
-                </span>
-            )}
-        </Typography>
-    )
+    // Manejar agregar evento
+    const handleAddEvent = (date: Date) => {
+        if (onAddEvent) {
+            onAddEvent(date)
+        }
+        setOpenModal(false)
+    }
 
     return (
         <Box className={classes.root}>
@@ -397,7 +364,7 @@ export default function CalendarView({
                         center: "title",
                         right: "dayGridMonth,dayGridWeek",
                     }}
-                    events={getEvents()}
+                    events={getFullCalendarEvents()}
                     editable={true}
                     height="auto"
                     fixedWeekCount={false}
@@ -408,31 +375,19 @@ export default function CalendarView({
                         meridiem: "short",
                     }}
                     dateClick={handleDateClick}
+                    eventClick={handleEventClick}
+                    eventDrop={handleEventDrop}
                     moreLinkClick={handleMoreLinkClick}
-                    eventDrop={(info) => {
-                        if (onEventDrop) {
-                            const dateStr = info.event.start?.toISOString().split("T")[0] || ""
-                            // Usar la función para crear la fecha correctamente
-                            const dropDate = createDateWithoutTimezoneIssue(dateStr)
-                            onEventDrop(info.event, dropDate)
-                        }
-                    }}
-                    eventClick={(info) => {
-                        if (onEventClick) {
-                            onEventClick(info.event)
-                        }
-                    }}
                 />
             </div>
 
-            <Dialog
-                actions={actions}
-                content={content}
-                data-testid="events-dialog"
+            {/* Usar el nuevo DayDetailModal */}
+            <DayDetailModal
                 open={openModal}
-                title={title}
-                contentPadding="16px"
-                contentDividers
+                onClose={handleCloseModal}
+                date={selectedDate}
+                events={selectedDateEvents}
+                onAddEvent={handleAddEvent}
             />
         </Box>
     )
