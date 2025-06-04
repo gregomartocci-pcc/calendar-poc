@@ -1,4 +1,5 @@
 "use client"
+
 import type React from "react"
 import { useRef, useState } from "react"
 import { Box, makeStyles, type Theme, createStyles } from "@material-ui/core"
@@ -81,32 +82,50 @@ export function Sidebar() {
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault()
         e.dataTransfer.dropEffect = "move"
+
+        // Verificar si hay datos JSON en el dataTransfer
+        try {
+            const types = e.dataTransfer.types
+            if (types.includes("application/json")) {
+                setIsDragOver(true)
+            }
+        } catch (error) {
+            console.error("Error checking dataTransfer types:", error)
+        }
     }
 
     const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault()
+        console.log("🎯 Sidebar: Drag enter")
         setIsDragOver(true)
     }
 
     const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault()
+        console.log("🎯 Sidebar: Drag leave")
         setIsDragOver(false)
     }
 
     const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault()
+        console.log("🎯 Sidebar: Drop event detected")
         setIsDragOver(false)
-        
+
         try {
             // Intentar obtener datos del evento arrastrado desde el calendario
             const eventData = e.dataTransfer.getData("application/json")
+            console.log("🎯 Sidebar: Drop data:", eventData)
+
             if (eventData) {
                 const event = JSON.parse(eventData)
                 console.log("🎯 Sidebar: Event dropped from calendar:", event)
-                
+
                 // Mover el evento de vuelta al sidebar (desprogramarlo)
                 moveEventToSidebar(event.id)
                 console.log(`✅ Sidebar: Event "${event.title}" moved back to sidebar`)
+
+                // 🛠️ QUITAR EL ALERT MOLESTO
+                // alert(`Event "${event.title}" has been unscheduled and moved back to the sidebar`)
             }
         } catch (error) {
             console.error("Error handling drop in sidebar:", error)
@@ -140,20 +159,21 @@ export function Sidebar() {
     })
 
     return (
-        <Box 
-            className={`${classes.root} ${isDragOver ? classes.dropTarget : ''}`}
+        <Box
+            className={`${classes.root} ${isDragOver ? classes.dropTarget : ""}`}
             onDragOver={handleDragOver}
             onDragEnter={handleDragEnter}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
+            data-sidebar="true"
         >
             <Typography variant="h4" className={classes.title}>
                 Not Scheduled
             </Typography>
 
             {/* Indicador de drop cuando se arrastra un evento sobre el sidebar */}
-            <div className={`${classes.dropIndicator} ${isDragOver ? classes.dropIndicatorActive : ''}`}>
-                Suelta aquí para desprogramar el evento
+            <div className={`${classes.dropIndicator} ${isDragOver ? classes.dropIndicatorActive : ""}`}>
+                Drop here to unschedule the event
             </div>
 
             <div ref={containerRef}>
@@ -164,7 +184,7 @@ export function Sidebar() {
                         index={index}
                         isDraggable={true}
                         dragType="html5"
-                        onDragStart={handleDragStart}
+                        onDragStart={(e) => handleDragStart(e, task)}
                         onDragEnd={handleDragEnd}
                     />
                 ))}

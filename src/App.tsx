@@ -47,10 +47,10 @@ const useStyles = makeStyles((theme: Theme) =>
 
 function AppContent() {
   const classes = useStyles()
-  const [currentView, setCurrentView] = useState("calendar") // 🎯 CAMBIAR A CALENDAR PARA PROBAR
+  const [currentView, setCurrentView] = useState("calendar")
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
-  const { addNewEvent, scheduledTasks, moveTaskToCalendar, deleteEvent } = useTaskContext()
+  const { addNewEvent, scheduledTasks, moveTaskToCalendar, deleteEvent, moveEventToSidebar } = useTaskContext()
 
   const handleViewChange = (view: string) => {
     console.log("Changing view to:", view)
@@ -69,7 +69,6 @@ function AppContent() {
   const handleCreateEvent = (eventData: EventFormData) => {
     console.log("🎯 App: Creating new event:", eventData)
 
-    // Crear el task con la fecha programada
     const newTask = {
       id: `event-${Date.now()}-${Math.random()}`,
       title: eventData.title,
@@ -79,8 +78,8 @@ function AppContent() {
       assignee: eventData.assignee,
       scheduledDate: (() => {
         const [year, month, day] = eventData.date.split("-").map(Number)
-        return new Date(year, month - 1, day) // month - 1 porque los meses en JS van de 0-11
-      })(), // 🎯 CONVERTIR STRING A DATE EN ZONA HORARIA LOCAL
+        return new Date(year, month - 1, day)
+      })(),
       startTime: eventData.startTime,
       endTime: eventData.endTime,
       timezone: eventData.timezone,
@@ -88,33 +87,41 @@ function AppContent() {
     }
 
     console.log("🎯 App: New task object:", newTask)
-
-    // 🎯 USAR FUNCIÓN DEL CONTEXTO
     addNewEvent(newTask)
-
     console.log(`✅ App: Event "${eventData.title}" created successfully!`)
-    alert(`Event "${eventData.title}" created successfully!`)
+    // 🛠️ QUITAR ALERT AQUÍ TAMBIÉN
+    // alert(`Event "${eventData.title}" created successfully!`)
   }
 
-  // 🎯 NUEVA FUNCIÓN: Manejar cuando se arrastra una tarea al calendario
+  // Manejar cuando se arrastra una tarea al calendario
   const handleTaskDropOnCalendar = (task: any, newDate: Date) => {
     console.log("🎯 App: Task dropped on calendar:", task, "to date:", newDate)
 
-    // Usar la función del contexto para mover la tarea
     if (moveTaskToCalendar) {
       moveTaskToCalendar(task.id, newDate)
       console.log(`✅ App: Task "${task.title}" moved to ${newDate.toDateString()}`)
     }
   }
 
-  // 🎯 NUEVA FUNCIÓN: Manejar cuando se mueve una tarea ya programada en el calendario
+  // Manejar cuando se mueve una tarea ya programada en el calendario
   const handleEventMoveInCalendar = (event: any, newDate: Date) => {
     console.log("🎯 App: Event moved in calendar:", event, "to date:", newDate)
 
-    // Actualizar la fecha del evento programado
     if (moveTaskToCalendar) {
       moveTaskToCalendar(event.id, newDate)
       console.log(`✅ App: Event "${event.title}" moved to ${newDate.toDateString()}`)
+    }
+  }
+
+  // 🎯 NUEVA FUNCIÓN: Manejar cuando un evento se arrastra del calendario al sidebar
+  const handleEventDragToSidebar = (event: any) => {
+    console.log("🎯 App: Event dragged from calendar to sidebar:", event)
+
+    if (moveEventToSidebar) {
+      moveEventToSidebar(event.id)
+      console.log(`✅ App: Event "${event.title}" unscheduled and moved back to sidebar`)
+      // 🛠️ QUITAR ALERT MOLESTO
+      // alert(`Event "${event.title}" has been unscheduled and moved back to the sidebar`)
     }
   }
 
@@ -147,6 +154,7 @@ function AppContent() {
             onEventDrop={handleEventMoveInCalendar}
             onTaskDrop={handleTaskDropOnCalendar}
             onAddEvent={handleAddEvent}
+            onEventDragToSidebar={handleEventDragToSidebar}
           />
         )
       case "list":
@@ -163,12 +171,10 @@ function AppContent() {
 
   return (
     <Box className={classes.root}>
-      {/* Header superior */}
       <Header />
 
       <Box className={classes.content}>
         <Paper elevation={1}>
-          {/* Filtros con props para cambiar la vista */}
           <TaskFilters onCreateTodo={handleCreateTodo} onViewChange={handleViewChange} currentView={currentView} />
 
           <Box className={classes.mainContent}>
@@ -180,7 +186,6 @@ function AppContent() {
         </Paper>
       </Box>
 
-      {/* Modal para crear eventos */}
       <CreateTaskModal
         open={createModalOpen}
         onClose={handleCloseModal}
