@@ -5,9 +5,8 @@ import { useState, useRef, useEffect } from "react"
 import { Box } from "@material-ui/core"
 import { makeStyles } from "@material-ui/core/styles"
 import FullCalendar from "@fullcalendar/react"
-import dayGridPlugin from "@fullcalendar/daygrid"
 import interactionPlugin from "@fullcalendar/interaction"
-
+import dayGridPlugin from "@fullcalendar/daygrid"
 import "./calendar-styles.css"
 import { DayDetailModal } from "../DayDetailModal/DayDetailModal"
 
@@ -422,7 +421,7 @@ export default function CalendarView({
             <div className={classes.calendarContainer} onDrop={handleDrop} onDragOver={handleDragOver}>
                 <FullCalendar
                     ref={calendarRef}
-                    plugins={[dayGridPlugin, interactionPlugin]}
+                    plugins={[interactionPlugin, dayGridPlugin]}
                     initialView="dayGridMonth"
                     headerToolbar={{
                         left: "prev,next today",

@@ -1,0 +1,174 @@
+/* 🎯 CSS AGRESIVO PARA CONVERTIR RESOURCE TIMELINE EN KANBAN VERTICAL */
+
+.vertical-kanban-wrapper {
+  height: 100%;
+  width: 100%;
+  transform: rotate(90deg);
+  transform-origin: center center;
+  position: relative;
+}
+
+.vertical-kanban-wrapper .fc {
+  transform: rotate(-90deg);
+  transform-origin: center center;
+  width: 100vh;
+  height: 100vw;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-left: -50vh;
+  margin-top: -50vw;
+}
+
+/* OCULTAR ELEMENTOS NO NECESARIOS */
+.fc-timeline-header-row,
+.fc-timeline-header,
+.fc-timeline-slot-label,
+.fc-timeline-slot-minor,
+.fc-resource-timeline-divider {
+  display: none !important;
+}
+
+/* CONFIGURAR COMO COLUMNAS VERTICALES */
+.fc-timeline-body {
+  display: flex !important;
+  flex-direction: row !important;
+  height: 100% !important;
+}
+
+/* ÁREA DE RECURSOS COMO HEADERS DE COLUMNAS */
+.fc-resource-area {
+  display: none !important;
+}
+
+/* SLOTS COMO COLUMNAS VERTICALES */
+.fc-timeline-slot {
+  border-right: 2px solid #e5e7eb !important;
+  background-color: #ffffff !important;
+  min-width: 300px !important;
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: relative !important;
+}
+
+/* AGREGAR HEADERS PERSONALIZADOS */
+.fc-timeline-slot:nth-child(1)::before {
+  content: "Not Scheduled";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 16px;
+  font-weight: 600;
+  color: #374151;
+  text-align: center;
+  z-index: 10;
+}
+
+.fc-timeline-slot:nth-child(2)::before {
+  content: "Today (Feb 18)";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 16px;
+  font-weight: 600;
+  color: #374151;
+  text-align: center;
+  z-index: 10;
+}
+
+.fc-timeline-slot:nth-child(3)::before {
+  content: "Tomorrow (Feb 19)";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 16px;
+  font-weight: 600;
+  color: #374151;
+  text-align: center;
+  z-index: 10;
+}
+
+.fc-timeline-slot:nth-child(4)::before {
+  content: "Next 7 Days";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 16px;
+  font-weight: 600;
+  color: #374151;
+  text-align: center;
+  z-index: 10;
+}
+
+.fc-timeline-slot-frame {
+  height: 100% !important;
+  padding: 60px 16px 16px 16px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  overflow-y: auto !important;
+}
+
+/* EVENTOS COMO TARJETAS VERTICALES */
+.vertical-kanban-event {
+  border: none !important;
+  background: transparent !important;
+  margin: 0 0 12px 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  cursor: grab !important;
+  transform: rotate(0deg) !important;
+}
+
+.kanban-task-card-vertical {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 8px !important;
+  background: white !important;
+  cursor: grab !important;
+  width: 100% !important;
+  transform: rotate(0deg) !important;
+}
+
+.kanban-task-card-vertical:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  transform: translateY(-2px) rotate(0deg) !important;
+}
+
+/* DRAG & DROP STATES */
+.fc-event-dragging {
+  opacity: 0.7 !important;
+  z-index: 1000 !important;
+}
+
+.fc-timeline-slot.fc-highlight {
+  background-color: #e0f2fe !important;
+  border: 2px dashed #0284c7 !important;
+}
+
+/* SCROLLBAR */
+.fc-timeline-slot-frame::-webkit-scrollbar {
+  width: 6px;
+}
+
+.fc-timeline-slot-frame::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.fc-timeline-slot-frame::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}

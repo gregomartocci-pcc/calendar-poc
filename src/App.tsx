@@ -8,12 +8,14 @@ import { Header } from "./components/Header/Header"
 
 import { TaskProvider, useTaskContext } from "./contexts/TasksContext"
 
-import { MUIKanbanBoard } from "./components/KanbanBoard/KanbanBoard"
+
 import { TaskFilters } from "./components/TasksFilters/TasksFilters"
 import { CreateTaskModal, type EventFormData } from "./components/CreateTaskModal/CreateTaskModal"
 
 import { Sidebar } from "./Sidebar/Sidebar"
 import CalendarView from "./components/CalendarView/CalendarView"
+import { MUIKanbanBoard } from "./components/KanbanBoard/KanbanBoard"
+
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -165,7 +167,7 @@ function AppContent() {
           </Box>
         )
       default:
-        return <MUIKanbanBoard />
+        return
     }
   }
 
